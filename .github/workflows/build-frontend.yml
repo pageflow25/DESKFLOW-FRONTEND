@@ -4,11 +4,13 @@ name: Build & Publish Deskflow Frontend
 on:
   push:
     tags:
-      - 'v1.0.0' # Dispara apenas em tags (v1.0.0, v1.0.1)
+      - 'v*.*.*' # Dispara em versões semântico (ex: v1.2.3)
 
 jobs:
   build:
     runs-on: self-hosted
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }} # Token de publicação (repo secret)
     defaults:
       run:
         shell: powershell
@@ -33,6 +35,3 @@ jobs:
 
       - name: Build & publish Electron (Windows)
         run: npm run build:win -- --publish always
-        env:
-          # ATENÇÃO: Use o NOME que você deu nas Configurações do GitHub Secrets
-          GH_TOKEN: ${{ secrets.ghp_deskflowcasadagrafica }}
