@@ -6,6 +6,8 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
+    // Use relative asset paths in production to avoid blank screen when loaded via file://
+    base: './',
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')
