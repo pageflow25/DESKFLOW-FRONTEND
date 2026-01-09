@@ -1,7 +1,8 @@
 import axios from 'axios'
 
 // Base URL da API - pode ser configurada via variável de ambiente
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// IP do seu servidor Windows (Porta 8000)
+const API_BASE_URL = 'http://192.168.1.10:8000'
 
 console.log('[API Config] Base URL:', API_BASE_URL)
 
