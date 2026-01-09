@@ -1,10 +1,10 @@
 name: Build & Publish Deskflow Frontend
  
- 
+
 on:
   push:
     tags:
-      - 'v*.*.*' # Dispara apenas em tags (v1.0.0, v1.0.1)
+      - 'v1.0.0' # Dispara apenas em tags (v1.0.0, v1.0.1)
 
 jobs:
   build:
