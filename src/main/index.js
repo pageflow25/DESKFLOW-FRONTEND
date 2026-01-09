@@ -1,4 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -25,6 +26,15 @@ function createWindow() {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+
+    // Check for updates once the UI is ready so users get notified promptly.
+    if (app.isPackaged) {
+      autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+        console.error('Auto-update failed to start', error)
+      })
+    } else {
+      console.log('Auto-update skipped because the app is not packaged.')
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -46,7 +56,16 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.deskflow.app')
+
+  // Basic logging to help trace the update lifecycle when debugging in production.
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available', info?.version ?? 'unknown version')
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded', info?.version ?? 'unknown version')
+  })
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

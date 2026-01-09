@@ -5,6 +5,12 @@
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
+  
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pageflow25/DESKFLOW-FRONTEND.git"
+  },
+
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -24,6 +30,7 @@
     "@twind/preset-autoprefix": "^1.0.7",
     "@twind/preset-tailwind": "^1.1.4",
     "axios": "^1.13.2",
+    "electron-updater": "^6.7.3",
     "react-router-dom": "^7.11.0"
   },
   "devDependencies": {
@@ -41,5 +48,59 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "vite": "^7.2.6"
+  },
+  "build": {
+    "appId": "com.deskflow.app",
+    
+    "productName": "Deskflow", 
+    
+    "directories": {
+      "buildResources": "build"
+    },
+    "files": [
+      "!**/.vscode/*",
+      "!src/*",
+      "!electron.vite.config.{js,ts,mjs,cjs}",
+      "!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}",
+      "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
+    ],
+    "asarUnpack": ["resources/**"],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "pageflow25",
+        
+        "repo": "DESKFLOW-FRONTEND", 
+        
+        "private": true
+      }
+    ],
+    "win": {
+      "executableName": "deskflow-frontend",
+      "artifactName": "${name}-${version}-setup.${ext}",
+      "target": "nsis"
+    },
+    "mac": {
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": [
+        { "NSCameraUsageDescription": "Application requests access to the device's camera." },
+        { "NSMicrophoneUsageDescription": "Application requests access to the device's microphone." },
+        { "NSDocumentsFolderUsageDescription": "Application requests access to the user's Documents folder." },
+        { "NSDownloadsFolderUsageDescription": "Application requests access to the user's Downloads folder." }
+      ],
+      "notarize": false
+    },
+    "dmg": {
+      "artifactName": "${name}-${version}.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage", "snap", "deb"],
+      "maintainer": "electronjs.org",
+      "category": "Utility"
+    },
+    "appImage": {
+      "artifactName": "${name}-${version}.${ext}"
+    },
+    "npmRebuild": false
   }
 }
