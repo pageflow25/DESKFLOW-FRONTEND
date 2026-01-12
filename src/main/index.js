@@ -4,9 +4,119 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
+const UPDATE_POLL_INTERVAL = 1000 * 60 * 30 // 30 minutos
+const AUTO_UPDATE_MODE = 'silent' // 'silent' | 'manual'
+
+let mainWindow
+
+const safeSendToRenderer = (channel, payload) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send(channel, payload)
+}
+
+const registerUpdateIpcHandlers = () => {
+  ipcMain.handle('updates:check-now', async () => {
+    if (!app.isPackaged) return { ok: false, reason: 'dev-mode' }
+
+    await autoUpdater.checkForUpdates()
+    return { ok: true }
+  })
+
+  ipcMain.handle('updates:start-download', async () => {
+    if (!app.isPackaged) return { ok: false, reason: 'dev-mode' }
+
+    await autoUpdater.downloadUpdate()
+    return { ok: true }
+  })
+
+  ipcMain.handle('updates:quit-and-install', () => {
+    if (!app.isPackaged) return { ok: false, reason: 'dev-mode' }
+
+    autoUpdater.quitAndInstall(false, true)
+    return { ok: true }
+  })
+}
+
+const setupAutoUpdater = () => {
+  if (!app.isPackaged) {
+    safeSendToRenderer('updates:disabled', { reason: 'dev-mode' })
+    return
+  }
+
+  const isSilent = AUTO_UPDATE_MODE === 'silent'
+
+  autoUpdater.autoDownload = isSilent
+  autoUpdater.autoInstallOnAppQuit = isSilent
+  autoUpdater.allowDowngrade = false
+  autoUpdater.fullChangelog = true
+
+  autoUpdater.on('checking-for-update', () => safeSendToRenderer('updates:checking'))
+
+  autoUpdater.on('update-available', (info) => {
+    safeSendToRenderer('updates:available', {
+      version: info.version,
+      releaseName: info.releaseName,
+      releaseNotes: info.releaseNotes
+    })
+
+    if (isSilent) {
+      autoUpdater.downloadUpdate().catch((error) => {
+        safeSendToRenderer('updates:error', {
+          message: error?.message ?? 'Falha ao iniciar download da atualização'
+        })
+      })
+    }
+  })
+
+  autoUpdater.on('update-not-available', () => safeSendToRenderer('updates:not-available'))
+
+  autoUpdater.on('download-progress', (progress) => {
+    safeSendToRenderer('updates:download-progress', {
+      percent: progress.percent,
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total
+    })
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    safeSendToRenderer('updates:downloaded', {
+      version: info.version,
+      releaseName: info.releaseName
+    })
+
+    if (isSilent) {
+      setTimeout(() => autoUpdater.quitAndInstall(false, true), 1000)
+    }
+  })
+
+  autoUpdater.on('error', (error) => {
+    safeSendToRenderer('updates:error', {
+      message: error?.message ?? 'Erro desconhecido no processo de atualização'
+    })
+  })
+
+  const checkForUpdates = () =>
+    autoUpdater.checkForUpdates().catch((error) => {
+      safeSendToRenderer('updates:error', {
+        message: error?.message ?? 'Erro ao procurar atualização'
+      })
+    })
+
+  const startChecks = () => {
+    checkForUpdates()
+    setInterval(checkForUpdates, UPDATE_POLL_INTERVAL)
+  }
+
+  if (mainWindow?.webContents?.isLoading()) {
+    mainWindow.webContents.once('did-finish-load', startChecks)
+  } else {
+    startChecks()
+  }
+}
+
 function createWindow() {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1024,
@@ -21,20 +131,10 @@ function createWindow() {
     }
   })
 
-  // Maximizar a janela ao iniciar (padrão desktop)
   mainWindow.maximize()
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-
-    // Check for updates once the UI is ready so users get notified promptly.
-    if (app.isPackaged) {
-      autoUpdater.checkForUpdatesAndNotify().catch((error) => {
-        console.error('Auto-update failed to start', error)
-      })
-    } else {
-      console.log('Auto-update skipped because the app is not packaged.')
-    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -42,13 +142,13 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 // This method will be called when Electron has finished
@@ -57,15 +157,6 @@ function createWindow() {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.deskflow.app')
-
-  // Basic logging to help trace the update lifecycle when debugging in production.
-  autoUpdater.on('update-available', (info) => {
-    console.log('Update available', info?.version ?? 'unknown version')
-  })
-
-  autoUpdater.on('update-downloaded', (info) => {
-    console.log('Update downloaded', info?.version ?? 'unknown version')
-  })
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -77,7 +168,10 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  registerUpdateIpcHandlers()
+
   createWindow()
+  setupAutoUpdater()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

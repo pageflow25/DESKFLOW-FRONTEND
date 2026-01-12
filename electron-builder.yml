@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: deskflow-frontend
+appId: com.deskflow.app
+productName: Deskflow
 directories:
   buildResources: build
 files:
@@ -11,7 +11,8 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: deskflow-frontend
+  target: nsis
+  executableName: deskflow
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -38,5 +39,9 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  - provider: github
+    owner: pageflow25
+    repo: DESKFLOW-FRONTEND
+    private: true
+    releaseType: release
+    channel: latest

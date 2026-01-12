@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { useEffect } from 'react'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import UpdateNotice from './components/UpdateNotice'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import SchoolDetails from './pages/SchoolDetails'
@@ -33,6 +34,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <UpdateNotice />
         <AuthEventListener />
         <Routes>
           <Route path="/login" element={<Login />} />
