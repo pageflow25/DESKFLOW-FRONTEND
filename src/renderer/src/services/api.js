@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-// Base URL da API - lida de variável de ambiente exposta pelo preload
-const API_BASE_URL = window.api?.env?.apiBaseUrl || 'http://192.168.1.10:8000'
+// Carregar todas as variáveis de ambiente do preload
+const ENV = window.api?.env || {}
+const API_BASE_URL = ENV.apiBaseUrl || 'http://localhost:8000'
 
 console.log('[API Config] Base URL:', API_BASE_URL)
 

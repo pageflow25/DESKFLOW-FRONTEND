@@ -29,7 +29,10 @@ const updatesApi = {
 const api = {
   updates: updatesApi,
   env: {
-    apiBaseUrl: process.env.API_BASE_URL || ''
+    apiBaseUrl: process.env.API_BASE_URL || '',
+    ghToken: process.env.GH_TOKEN || '',
+    autoUpdateMode: process.env.AUTO_UPDATE_MODE || 'prompt',
+    updatePollInterval: process.env.UPDATE_POLL_INTERVAL || (1000 * 60 * 30).toString()
   }
 }
 

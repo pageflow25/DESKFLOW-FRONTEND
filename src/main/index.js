@@ -10,7 +10,23 @@ let AUTO_UPDATE_MODE = 'prompt'
 let GH_TOKEN = ''
 
 const loadEnvironment = () => {
-  const envPath = join(app.getAppPath(), '.env')
+  // Em produção (packaged), o .env está na raiz da aplicação
+  // Em desenvolvimento, está na raiz do projeto
+  let envPath = join(app.getAppPath(), '.env')
+  
+  // Se não encontrar, tenta na raiz (para dev mode)
+  if (!envPath.includes('app.asar')) {
+    const fs = require('fs')
+    const path = require('path')
+    
+    // Tenta caminho do desenvolvedor
+    const devEnvPath = path.resolve(__dirname, '../../.env')
+    if (fs.existsSync(devEnvPath)) {
+      envPath = devEnvPath
+    }
+  }
+  
+  console.log('[Environment] Loading from:', envPath)
   dotenv.config({ path: envPath })
 
   UPDATE_POLL_INTERVAL = Number(process.env.UPDATE_POLL_INTERVAL ?? UPDATE_POLL_INTERVAL)
@@ -18,6 +34,11 @@ const loadEnvironment = () => {
   GH_TOKEN = process.env.GH_TOKEN ?? ''
 
   // electron-updater usa GH_TOKEN do process.env; carregamos via dotenv acima
+  console.log('[Environment] Loaded from .env:')
+  console.log('  - UPDATE_POLL_INTERVAL:', UPDATE_POLL_INTERVAL)
+  console.log('  - AUTO_UPDATE_MODE:', AUTO_UPDATE_MODE)
+  console.log('  - GH_TOKEN:', GH_TOKEN ? '***' : 'NOT SET')
+  console.log('  - API_BASE_URL:', process.env.API_BASE_URL || 'NOT SET')
 }
 let mainWindow
 
