@@ -1,8 +1,7 @@
 import axios from 'axios'
 
-// Base URL da API - pode ser configurada via variável de ambiente
-// IP do seu servidor Windows (Porta 8000)
-const API_BASE_URL = 'http://192.168.1.10:8000'
+// Base URL da API - lida de variável de ambiente exposta pelo preload
+const API_BASE_URL = window.api?.env?.apiBaseUrl || 'http://192.168.1.10:8000'
 
 console.log('[API Config] Base URL:', API_BASE_URL)
 

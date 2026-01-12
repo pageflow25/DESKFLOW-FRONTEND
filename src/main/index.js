@@ -1,12 +1,22 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
+import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
-const UPDATE_POLL_INTERVAL = 1000 * 60 * 30 // 30 minutos
-const AUTO_UPDATE_MODE = 'silent' // 'silent' | 'manual'
+let UPDATE_POLL_INTERVAL = 1000 * 60 * 30 // 30 minutos (default)
+let AUTO_UPDATE_MODE = 'prompt'
 
+const loadEnvironment = () => {
+  const envPath = join(app.getAppPath(), '.env')
+  dotenv.config({ path: envPath })
+
+  UPDATE_POLL_INTERVAL = Number(process.env.UPDATE_POLL_INTERVAL ?? UPDATE_POLL_INTERVAL)
+  AUTO_UPDATE_MODE = (process.env.AUTO_UPDATE_MODE ?? AUTO_UPDATE_MODE).toLowerCase()
+
+  // electron-updater usa GH_TOKEN do process.env; carregamos via dotenv acima
+}
 let mainWindow
 
 const safeSendToRenderer = (channel, payload) => {
@@ -41,6 +51,11 @@ const setupAutoUpdater = () => {
   if (!app.isPackaged) {
     safeSendToRenderer('updates:disabled', { reason: 'dev-mode' })
     return
+  }
+
+  autoUpdater.requestHeaders = {
+    // Substitua o 'ghp_...' pelo SEU TOKEN que você gerou no GitHub
+    'Authorization': `token ${GHP_TOKEN}`
   }
 
   const isSilent = AUTO_UPDATE_MODE === 'silent'
@@ -155,6 +170,8 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  loadEnvironment()
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.deskflow.app')
 

@@ -26,7 +26,12 @@ const updatesApi = {
   }
 }
 
-const api = { updates: updatesApi }
+const api = {
+  updates: updatesApi,
+  env: {
+    apiBaseUrl: process.env.API_BASE_URL || ''
+  }
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
