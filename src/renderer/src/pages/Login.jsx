@@ -54,13 +54,13 @@ export default function Login() {
     setLoading(true)
 
     const result = await login(username, password)
-    
+
     if (result.success) {
       navigate('/dashboard')
     } else {
       setError(result.error)
     }
-    
+
     setLoading(false)
   }
 
@@ -69,14 +69,14 @@ export default function Login() {
       {/* ============================================ */}
       {/* HEADER PRINCIPAL */}
       {/* ============================================ */}
-      <header 
+      <header
         className={tw`flex-shrink-0 border-b`}
         style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
       >
         <div className={tw`flex items-center justify-between px-6 py-3`}>
           {/* Logo / Título */}
           <div className={tw`flex items-center gap-3`}>
-            <div 
+            <div
               className={tw`w-9 h-9 rounded-lg flex items-center justify-center`}
               style={{ backgroundColor: '#3b82f6' }}
             >
@@ -89,7 +89,7 @@ export default function Login() {
           </div>
 
           {/* Badge de Login */}
-          <div 
+          <div
             className={tw`px-3 py-1.5 rounded-full text-xs font-medium`}
             style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}
           >
@@ -104,24 +104,24 @@ export default function Login() {
       <main className={tw`flex-1 flex items-center justify-center px-6`}>
         <div className={tw`w-full max-w-md`}>
           {/* Card de Login */}
-          <div 
+          <div
             className={tw`rounded-xl border overflow-hidden`}
             style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
           >
             {/* Header do Card */}
-            <div 
+            <div
               className={tw`px-8 py-6 border-b`}
               style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
             >
               <div className={tw`flex items-center gap-4 mb-3`}>
-                <div 
+                <div
                   className={tw`w-12 h-12 rounded-xl flex items-center justify-center`}
                   style={{ backgroundColor: '#3b82f6' }}
                 >
                   <Icons.User className={tw`w-6 h-6`} style={{ color: '#ffffff' }} />
                 </div>
                 <div>
-                  <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>Login <DESKFLOW></DESKFLOW></h2>
+                  <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>Login DESKFLOW</h2>
                   <p className={tw`text-sm`} style={{ color: '#64748b' }}>Acesso restrito ao sistema</p>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default function Login() {
             <div className={tw`px-8 py-6`}>
               {/* Mensagem de Erro */}
               {error && (
-                <div 
+                <div
                   className={tw`flex items-start gap-3 px-4 py-3 rounded-lg mb-6`}
                   style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}
                 >
@@ -144,8 +144,8 @@ export default function Login() {
               <form onSubmit={handleSubmit} className={tw`space-y-5`}>
                 {/* Campo Usuário */}
                 <div>
-                  <label 
-                    className={tw`block text-sm font-semibold mb-2`} 
+                  <label
+                    className={tw`block text-sm font-semibold mb-2`}
                     htmlFor="username"
                     style={{ color: '#334155' }}
                   >
@@ -161,7 +161,7 @@ export default function Login() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className={tw`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all`}
-                      style={{ 
+                      style={{
                         backgroundColor: '#ffffff',
                         borderColor: '#e2e8f0',
                         color: '#0f172a'
@@ -175,8 +175,8 @@ export default function Login() {
 
                 {/* Campo Senha */}
                 <div>
-                  <label 
-                    className={tw`block text-sm font-semibold mb-2`} 
+                  <label
+                    className={tw`block text-sm font-semibold mb-2`}
                     htmlFor="password"
                     style={{ color: '#334155' }}
                   >
@@ -192,7 +192,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className={tw`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all`}
-                      style={{ 
+                      style={{
                         backgroundColor: '#ffffff',
                         borderColor: '#e2e8f0',
                         color: '#0f172a'
@@ -208,9 +208,8 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={tw`w-full py-3 rounded-lg font-semibold text-base flex items-center justify-center gap-2 transition-all ${
-                    loading ? 'cursor-not-allowed' : 'hover:shadow-lg active:scale-[0.98]'
-                  }`}
+                  className={tw`w-full py-3 rounded-lg font-semibold text-base flex items-center justify-center gap-2 transition-all ${loading ? 'cursor-not-allowed' : 'hover:shadow-lg active:scale-[0.98]'
+                    }`}
                   style={{
                     backgroundColor: loading ? '#94a3b8' : '#3b82f6',
                     color: '#ffffff'
@@ -232,7 +231,7 @@ export default function Login() {
             </div>
 
             {/* Footer do Card */}
-            <div 
+            <div
               className={tw`px-8 py-4 border-t text-center`}
               style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
             >
