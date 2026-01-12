@@ -244,7 +244,7 @@ export default function Login() {
           {/* Informações adicionais */}
           <div className={tw`mt-6 text-center`}>
             <p className={tw`text-sm`} style={{ color: '#64748b' }}>
-              DESKFLOW © {new Date().getFullYear()} - Todos os direitos reservados
+              DESKFLOW © {new Date().getFullYear()} - Versão 1.0.6
             </p>
           </div>
         </div>
