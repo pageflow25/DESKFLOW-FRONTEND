@@ -76,7 +76,14 @@ const setupAutoUpdater = () => {
     return
   }
 
+  if (AUTO_UPDATE_MODE === 'disabled') {
+    console.log('[AutoUpdater] Disabled by configuration')
+    safeSendToRenderer('updates:disabled', { reason: 'disabled-by-config' })
+    return
+  }
+
   if (!GH_TOKEN) {
+    console.log('[AutoUpdater] Disabled: missing GH_TOKEN')
     safeSendToRenderer('updates:disabled', { reason: 'missing-gh-token' })
     return
   }
