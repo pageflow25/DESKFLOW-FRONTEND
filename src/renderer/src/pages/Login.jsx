@@ -121,7 +121,7 @@ export default function Login() {
                   <Icons.User className={tw`w-6 h-6`} style={{ color: '#ffffff' }} />
                 </div>
                 <div>
-                  <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>Login Administrativo</h2>
+                  <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>Login <DESKFLOW></DESKFLOW></h2>
                   <p className={tw`text-sm`} style={{ color: '#64748b' }}>Acesso restrito ao sistema</p>
                 </div>
               </div>
