@@ -7,6 +7,7 @@ import icon from '../../resources/icon.png?asset'
 
 let UPDATE_POLL_INTERVAL = 1000 * 60 * 30 // 30 minutos (default)
 let AUTO_UPDATE_MODE = 'prompt'
+let GH_TOKEN = ''
 
 const loadEnvironment = () => {
   const envPath = join(app.getAppPath(), '.env')
@@ -14,6 +15,7 @@ const loadEnvironment = () => {
 
   UPDATE_POLL_INTERVAL = Number(process.env.UPDATE_POLL_INTERVAL ?? UPDATE_POLL_INTERVAL)
   AUTO_UPDATE_MODE = (process.env.AUTO_UPDATE_MODE ?? AUTO_UPDATE_MODE).toLowerCase()
+  GH_TOKEN = process.env.GH_TOKEN ?? ''
 
   // electron-updater usa GH_TOKEN do process.env; carregamos via dotenv acima
 }
@@ -53,9 +55,14 @@ const setupAutoUpdater = () => {
     return
   }
 
+  if (!GH_TOKEN) {
+    safeSendToRenderer('updates:disabled', { reason: 'missing-gh-token' })
+    return
+  }
+
   autoUpdater.requestHeaders = {
     // Substitua o 'ghp_...' pelo SEU TOKEN que você gerou no GitHub
-    'Authorization': `token ${GHP_TOKEN}`
+    'Authorization': `token ${GH_TOKEN}`
   }
 
   const isSilent = AUTO_UPDATE_MODE === 'silent'
