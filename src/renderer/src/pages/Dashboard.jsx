@@ -43,6 +43,11 @@ const Icons = {
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
+  ),
+  Refresh: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+    </svg>
   )
 }
 
@@ -50,6 +55,7 @@ export default function Dashboard() {
   const [escolas, setEscolas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [checkingUpdates, setCheckingUpdates] = useState(false)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -74,6 +80,18 @@ export default function Dashboard() {
     navigate(`/escola/${escola.escola_id}`, { state: { nomeEscola: escola.nome_escola } })
   }
 
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdates(true)
+    try {
+      await window.api?.updates?.checkNow()
+    } catch (err) {
+      console.error('Erro ao verificar atualizações:', err)
+    } finally {
+      // Mantém o spinner por um tempo mínimo para feedback visual
+      setTimeout(() => setCheckingUpdates(false), 1500)
+    }
+  }
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -87,14 +105,14 @@ export default function Dashboard() {
       {/* ============================================ */}
       {/* HEADER PRINCIPAL */}
       {/* ============================================ */}
-      <header 
+      <header
         className={tw`flex-shrink-0 border-b`}
         style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
       >
         <div className={tw`flex items-center justify-between px-6 py-3`}>
           {/* Logo / Título */}
           <div className={tw`flex items-center gap-3`}>
-            <div 
+            <div
               className={tw`w-9 h-9 rounded-lg flex items-center justify-center`}
               style={{ backgroundColor: '#3b82f6' }}
             >
@@ -113,6 +131,17 @@ export default function Dashboard() {
               <p className={tw`text-xs`} style={{ color: '#94a3b8' }}>Logado</p>
             </div>
             <button
+              onClick={handleCheckForUpdates}
+              disabled={checkingUpdates}
+              className={tw`p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50`}
+              title="Verificar atualizações"
+            >
+              <Icons.Refresh
+                className={tw`w-5 h-5 ${checkingUpdates ? 'animate-spin' : ''}`}
+                style={{ color: '#3b82f6' }}
+              />
+            </button>
+            <button
               onClick={handleLogout}
               className={tw`p-2 rounded-lg hover:bg-gray-100 transition-colors`}
               title="Sair"
@@ -126,13 +155,13 @@ export default function Dashboard() {
       {/* ============================================ */}
       {/* TÍTULO DA PÁGINA + STATS */}
       {/* ============================================ */}
-      <div 
+      <div
         className={tw`flex-shrink-0 border-b px-6 py-4`}
         style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
       >
         <div className={tw`flex items-center justify-between`}>
           <div className={tw`flex items-center gap-4`}>
-            <div 
+            <div
               className={tw`p-2 rounded-lg`}
               style={{ backgroundColor: '#f1f5f9' }}
             >
@@ -184,7 +213,7 @@ export default function Dashboard() {
 
         {/* Error State */}
         {error && (
-          <div 
+          <div
             className={tw`flex items-center gap-3 px-4 py-3 rounded-lg mb-6`}
             style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}
           >
@@ -201,18 +230,18 @@ export default function Dashboard() {
                 key={escola.escola_id}
                 onClick={() => handleEscolaClick(escola)}
                 className={tw`rounded-lg border cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]`}
-                style={{ 
+                style={{
                   backgroundColor: '#ffffff',
                   borderColor: '#e2e8f0'
                 }}
               >
                 {/* Card Header */}
-                <div 
+                <div
                   className={tw`px-5 py-4 border-b flex items-start justify-between`}
                   style={{ borderColor: '#f1f5f9' }}
                 >
                   <div className={tw`flex items-start gap-3 flex-1`}>
-                    <div 
+                    <div
                       className={tw`p-2.5 rounded-lg flex-shrink-0`}
                       style={{ backgroundColor: '#eff6ff' }}
                     >
@@ -242,11 +271,11 @@ export default function Dashboard() {
                 </div>
 
                 {/* Card Footer */}
-                <div 
+                <div
                   className={tw`px-5 py-3 flex items-center justify-end border-t`}
                   style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
                 >
-                  <span 
+                  <span
                     className={tw`text-xs font-medium flex items-center gap-1`}
                     style={{ color: '#3b82f6' }}
                   >
@@ -262,7 +291,7 @@ export default function Dashboard() {
         {/* Empty State */}
         {!loading && !error && escolas.length === 0 && (
           <div className={tw`flex flex-col items-center justify-center py-20`}>
-            <div 
+            <div
               className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
               style={{ backgroundColor: '#f1f5f9' }}
             >
