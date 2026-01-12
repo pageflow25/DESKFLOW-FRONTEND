@@ -10,34 +10,67 @@ let AUTO_UPDATE_MODE = 'prompt'
 let GH_TOKEN = ''
 
 const loadEnvironment = () => {
-  // Em produção (packaged), o .env está na raiz da aplicação
-  // Em desenvolvimento, está na raiz do projeto
-  let envPath = join(app.getAppPath(), '.env')
+  const fs = require('fs')
+  const path = require('path')
   
-  // Se não encontrar, tenta na raiz (para dev mode)
-  if (!envPath.includes('app.asar')) {
-    const fs = require('fs')
-    const path = require('path')
+  let envPath
+  let envFound = false
+  
+  if (app.isPackaged) {
+    // Em produção, tenta várias localizações
+    const possiblePaths = [
+      join(process.resourcesPath, '.env'),
+      join(app.getAppPath(), '.env'),
+      join(path.dirname(app.getPath('exe')), '.env')
+    ]
     
-    // Tenta caminho do desenvolvedor
-    const devEnvPath = path.resolve(__dirname, '../../.env')
-    if (fs.existsSync(devEnvPath)) {
-      envPath = devEnvPath
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        envPath = p
+        envFound = true
+        break
+      }
+    }
+  } else {
+    // Em desenvolvimento, busca na raiz do projeto
+    const possiblePaths = [
+      path.resolve(__dirname, '../../.env'),
+      path.resolve(process.cwd(), '.env'),
+      path.resolve(app.getAppPath(), '.env')
+    ]
+    
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        envPath = p
+        envFound = true
+        break
+      }
     }
   }
   
-  console.log('[Environment] Loading from:', envPath)
-  dotenv.config({ path: envPath })
+  if (envFound) {
+    console.log('[Environment] Loading from:', envPath)
+    const result = dotenv.config({ path: envPath })
+    
+    if (result.error) {
+      console.error('[Environment] Error loading .env:', result.error)
+    } else {
+      console.log('[Environment] Successfully loaded .env')
+    }
+  } else {
+    console.warn('[Environment] .env file not found, using defaults or system env vars')
+  }
 
+  // Atualizar variáveis locais
   UPDATE_POLL_INTERVAL = Number(process.env.UPDATE_POLL_INTERVAL ?? UPDATE_POLL_INTERVAL)
   AUTO_UPDATE_MODE = (process.env.AUTO_UPDATE_MODE ?? AUTO_UPDATE_MODE).toLowerCase()
   GH_TOKEN = process.env.GH_TOKEN ?? ''
 
-  // electron-updater usa GH_TOKEN do process.env; carregamos via dotenv acima
-  console.log('[Environment] Loaded from .env:')
+  // Log das configurações carregadas
+  console.log('[Environment] Configuration:')
   console.log('  - UPDATE_POLL_INTERVAL:', UPDATE_POLL_INTERVAL)
   console.log('  - AUTO_UPDATE_MODE:', AUTO_UPDATE_MODE)
-  console.log('  - GH_TOKEN:', GH_TOKEN ? '***' : 'NOT SET')
+  console.log('  - GH_TOKEN:', GH_TOKEN ? '***SET***' : 'NOT SET')
   console.log('  - API_BASE_URL:', process.env.API_BASE_URL || 'NOT SET')
 }
 let mainWindow
