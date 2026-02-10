@@ -68,6 +68,8 @@ export default function SchoolDetails() {
   const [selectedItems, setSelectedItems] = useState(new Set())
   const [generatingBudget, setGeneratingBudget] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [dataEntrega, setDataEntrega] = useState('')
 
   useEffect(() => {
     loadPedidos()
@@ -144,12 +146,18 @@ export default function SchoolDetails() {
         }
       })
       
+      // Formatar data de entrega para ISO se fornecida
+      const dataEntregaFormatada = dataEntrega 
+        ? `${dataEntrega}T12:00:00.000-03:00` 
+        : null
+
       const result = await orcamentoService.gerarOrcamento(
         parseInt(escolaId),
         Array.from(idsProdutos),
         Array.from(datasSaida),
         divisoesLogistica.size > 0 ? Array.from(divisoesLogistica) : null,
-        diasUteis.size > 0 ? Array.from(diasUteis) : null
+        diasUteis.size > 0 ? Array.from(diasUteis) : null,
+        dataEntregaFormatada
       )
       
       setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s)`)
@@ -160,6 +168,8 @@ export default function SchoolDetails() {
       setError(err.response?.data?.detail || 'Erro ao gerar orçamento')
     } finally {
       setGeneratingBudget(false)
+      setShowDateModal(false)
+      setDataEntrega('')
     }
   }
 
@@ -299,7 +309,7 @@ export default function SchoolDetails() {
 
           {/* Botão de Ação Principal */}
           <button
-            onClick={handleGenerateBudget}
+            onClick={() => setShowDateModal(true)}
             disabled={selectedItems.size === 0 || generatingBudget}
             className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${
               selectedItems.size === 0 || generatingBudget
@@ -398,6 +408,106 @@ export default function SchoolDetails() {
           />
         )}
       </main>
+
+      {/* ============================================ */}
+      {/* MODAL DATA DE SAÍDA */}
+      {/* ============================================ */}
+      {showDateModal && (
+        <div 
+          className={tw`fixed inset-0 z-50 flex items-center justify-center`}
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => !generatingBudget && setShowDateModal(false)}
+        >
+          <div 
+            className={tw`bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4`}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={tw`flex items-center gap-3 mb-5`}>
+              <div 
+                className={tw`w-10 h-10 rounded-lg flex items-center justify-center`}
+                style={{ backgroundColor: '#dbeafe' }}
+              >
+                <Icons.DocumentCheck className={tw`w-5 h-5`} style={{ color: '#3b82f6' }} />
+              </div>
+              <div>
+                <h3 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>Gerar Orçamento</h3>
+                <p className={tw`text-sm`} style={{ color: '#64748b' }}>Defina a data de saída do pedido</p>
+              </div>
+            </div>
+
+            {/* Campo de Data */}
+            <div className={tw`mb-6`}>
+              <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
+                Data de Saída
+              </label>
+              <input
+                type="date"
+                value={dataEntrega}
+                onChange={e => setDataEntrega(e.target.value)}
+                className={tw`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-colors`}
+                style={{ 
+                  borderColor: '#e2e8f0',
+                  color: '#0f172a'
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                min={new Date().toISOString().split('T')[0]}
+                disabled={generatingBudget}
+              />
+              <p className={tw`mt-1.5 text-xs`} style={{ color: '#94a3b8' }}>
+                Se não informada, será usada a data de hoje + 7 dias
+              </p>
+            </div>
+
+            {/* Info da seleção */}
+            <div 
+              className={tw`mb-6 px-4 py-3 rounded-lg`}
+              style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+            >
+              <p className={tw`text-sm`} style={{ color: '#64748b' }}>
+                <span className={tw`font-semibold`} style={{ color: '#334155' }}>{selectedItems.size}</span>
+                {' '}{selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'} para o orçamento
+              </p>
+            </div>
+
+            {/* Botões */}
+            <div className={tw`flex gap-3`}>
+              <button
+                onClick={() => { setShowDateModal(false); setDataEntrega('') }}
+                disabled={generatingBudget}
+                className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors hover:bg-gray-50`}
+                style={{ borderColor: '#e2e8f0', color: '#64748b' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGenerateBudget}
+                disabled={generatingBudget}
+                className={tw`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                  generatingBudget ? 'cursor-not-allowed' : 'hover:shadow-md active:scale-[0.98]'
+                }`}
+                style={{
+                  backgroundColor: generatingBudget ? '#86efac' : '#10b981',
+                  color: '#ffffff'
+                }}
+              >
+                {generatingBudget ? (
+                  <>
+                    <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Icons.DocumentCheck className={tw`w-4 h-4`} />
+                    Confirmar e Gerar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
