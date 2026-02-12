@@ -70,6 +70,7 @@ export default function SchoolDetails() {
   const [successMessage, setSuccessMessage] = useState('')
   const [showDateModal, setShowDateModal] = useState(false)
   const [dataEntrega, setDataEntrega] = useState('')
+  const [modoAgrupamento, setModoAgrupamento] = useState('unidade')
 
   useEffect(() => {
     loadPedidos()
@@ -157,10 +158,11 @@ export default function SchoolDetails() {
         Array.from(datasSaida),
         divisoesLogistica.size > 0 ? Array.from(divisoesLogistica) : null,
         diasUteis.size > 0 ? Array.from(diasUteis) : null,
-        dataEntregaFormatada
+        dataEntregaFormatada,
+        modoAgrupamento
       )
       
-      setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s)`)
+      setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}`)
       setTimeout(() => setSuccessMessage(''), 5000)
       
     } catch (err) {
@@ -170,6 +172,7 @@ export default function SchoolDetails() {
       setGeneratingBudget(false)
       setShowDateModal(false)
       setDataEntrega('')
+      setModoAgrupamento('unidade')
     }
   }
 
@@ -460,6 +463,49 @@ export default function SchoolDetails() {
               </p>
             </div>
 
+            {/* Modo de Agrupamento */}
+            <div className={tw`mb-6`}>
+              <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
+                Modo de Agrupamento
+              </label>
+              <div className={tw`flex gap-3`}>
+                <button
+                  type="button"
+                  onClick={() => setModoAgrupamento('unidade')}
+                  disabled={generatingBudget}
+                  className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
+                  style={{
+                    borderColor: modoAgrupamento === 'unidade' ? '#3b82f6' : '#e2e8f0',
+                    backgroundColor: modoAgrupamento === 'unidade' ? '#eff6ff' : '#ffffff',
+                    color: modoAgrupamento === 'unidade' ? '#1d4ed8' : '#64748b',
+                    boxShadow: modoAgrupamento === 'unidade' ? '0 0 0 1px #3b82f6' : 'none'
+                  }}
+                >
+                  <div className={tw`font-semibold mb-1`}>Por Unidade</div>
+                  <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                    1 orçamento por unidade escolar
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModoAgrupamento('escola')}
+                  disabled={generatingBudget}
+                  className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
+                  style={{
+                    borderColor: modoAgrupamento === 'escola' ? '#3b82f6' : '#e2e8f0',
+                    backgroundColor: modoAgrupamento === 'escola' ? '#eff6ff' : '#ffffff',
+                    color: modoAgrupamento === 'escola' ? '#1d4ed8' : '#64748b',
+                    boxShadow: modoAgrupamento === 'escola' ? '0 0 0 1px #3b82f6' : 'none'
+                  }}
+                >
+                  <div className={tw`font-semibold mb-1`}>Por Escola</div>
+                  <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                    Agrupa e soma todas as unidades
+                  </div>
+                </button>
+              </div>
+            </div>
+
             {/* Info da seleção */}
             <div 
               className={tw`mb-6 px-4 py-3 rounded-lg`}
@@ -474,7 +520,7 @@ export default function SchoolDetails() {
             {/* Botões */}
             <div className={tw`flex gap-3`}>
               <button
-                onClick={() => { setShowDateModal(false); setDataEntrega('') }}
+                onClick={() => { setShowDateModal(false); setDataEntrega(''); setModoAgrupamento('unidade') }}
                 disabled={generatingBudget}
                 className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors hover:bg-gray-50`}
                 style={{ borderColor: '#e2e8f0', color: '#64748b' }}

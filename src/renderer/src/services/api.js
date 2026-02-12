@@ -107,11 +107,12 @@ export const pedidoService = {
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade') => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
-      datas_saida: datasSaida
+      datas_saida: datasSaida,
+      modo_agrupamento: modoAgrupamento
     }
     
     // Adicionar parâmetros opcionais se fornecidos
