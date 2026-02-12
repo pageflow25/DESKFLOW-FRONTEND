@@ -54,6 +54,7 @@ const Icons = {
 export default function Dashboard() {
   const [escolas, setEscolas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [checkingUpdates, setCheckingUpdates] = useState(false)
   const { user, logout } = useAuth()
@@ -66,6 +67,7 @@ export default function Dashboard() {
   const loadEscolas = async () => {
     try {
       setLoading(true)
+      setError('')
       const data = await dashboardService.getEscolas()
       setEscolas(data.escolas)
     } catch (err) {
@@ -73,7 +75,13 @@ export default function Dashboard() {
       setError(err.response?.data?.detail || 'Erro ao carregar escolas')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    loadEscolas()
   }
 
   const handleEscolaClick = (escola) => {
@@ -198,9 +206,24 @@ export default function Dashboard() {
       {/* ============================================ */}
       <main className={tw`flex-1 overflow-auto px-6 py-6`}>
         {/* Seção Título */}
-        <div className={tw`mb-6`}>
-          <h3 className={tw`text-lg font-semibold mb-1`} style={{ color: '#1f2937' }}>Escolas Disponíveis</h3>
-          <p className={tw`text-sm`} style={{ color: '#64748b' }}>Clique em uma escola para ver os detalhes dos pedidos</p>
+        <div className={tw`mb-6 flex items-center justify-between`}>
+          <div>
+            <h3 className={tw`text-lg font-semibold mb-1`} style={{ color: '#1f2937' }}>Escolas Disponíveis</h3>
+            <p className={tw`text-sm`} style={{ color: '#64748b' }}>Clique em uma escola para ver os detalhes dos pedidos</p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={loading || refreshing}
+            className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-50`}
+            style={{ borderColor: '#e2e8f0', color: '#3b82f6', backgroundColor: '#ffffff' }}
+            title="Recarregar dados"
+          >
+            <Icons.Refresh
+              className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+              style={{ color: '#3b82f6' }}
+            />
+            Recarregar
+          </button>
         </div>
 
         {/* Loading State */}

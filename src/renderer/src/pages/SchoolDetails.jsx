@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { pedidoService, orcamentoService } from '../services/api'
 import { tw } from '@twind/core'
 import TreeGrid from '../components/TreeGrid'
+import ToggleGerarOP from '../components/ToggleGerarOP'
 
 // ============================================
 // ÍCONES SVG
@@ -49,6 +50,11 @@ const Icons = {
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
     </svg>
+  ),
+  Refresh: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+    </svg>
   )
 }
 
@@ -61,7 +67,7 @@ export default function SchoolDetails() {
   const location = useLocation()
   const { logout, user } = useAuth()
   const nomeEscola = location.state?.nomeEscola || 'MEMOREX'
-  
+
   const [divisoes, setDivisoes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -71,6 +77,8 @@ export default function SchoolDetails() {
   const [showDateModal, setShowDateModal] = useState(false)
   const [dataEntrega, setDataEntrega] = useState('')
   const [modoAgrupamento, setModoAgrupamento] = useState('unidade')
+  const [gerarOp, setGerarOp] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     loadPedidos()
@@ -87,7 +95,13 @@ export default function SchoolDetails() {
       setError(err.response?.data?.detail || 'Erro ao carregar pedidos')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    loadPedidos()
   }
 
   const handleSelectionChange = (selection) => {
@@ -100,23 +114,23 @@ export default function SchoolDetails() {
     try {
       setGeneratingBudget(true)
       setSuccessMessage('')
-      
+
       const idsProdutos = new Set()
       const datasSaida = new Set()
       const divisoesLogistica = new Set()
       const diasUteis = new Set()
-      
+
       selectedItems.forEach(nodeId => {
         const parts = nodeId.split('-')
-        
+
         if (parts.includes('produto')) {
           const divIndex = parseInt(parts[1])
           const produtoIndex = parseInt(parts[3])
-          
+
           if (divisoes[divIndex] && divisoes[divIndex].produtos[produtoIndex]) {
             const produto = divisoes[divIndex].produtos[produtoIndex]
             const divisao = divisoes[divIndex]
-            
+
             // Capturar divisão logística e dias úteis
             if (divisao.divisao_logistica && divisao.divisao_logistica !== 'Sem divisão') {
               divisoesLogistica.add(divisao.divisao_logistica)
@@ -128,9 +142,9 @@ export default function SchoolDetails() {
                 diasUteis.add(diasUteisNum)
               }
             }
-            
+
             idsProdutos.add(produto.id_produto)
-            
+
             if (parts.includes('data')) {
               const dataIndex = parseInt(parts[5])
               if (produto.datas[dataIndex] && produto.datas[dataIndex].data_saida !== 'Sem data saida') {
@@ -146,10 +160,10 @@ export default function SchoolDetails() {
           }
         }
       })
-      
+
       // Formatar data de entrega para ISO se fornecida
-      const dataEntregaFormatada = dataEntrega 
-        ? `${dataEntrega}T12:00:00.000-03:00` 
+      const dataEntregaFormatada = dataEntrega
+        ? `${dataEntrega}T12:00:00.000-03:00`
         : null
 
       const result = await orcamentoService.gerarOrcamento(
@@ -159,12 +173,16 @@ export default function SchoolDetails() {
         divisoesLogistica.size > 0 ? Array.from(divisoesLogistica) : null,
         diasUteis.size > 0 ? Array.from(diasUteis) : null,
         dataEntregaFormatada,
-        modoAgrupamento
+        modoAgrupamento,
+        gerarOp
       )
-      
+
       setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}`)
       setTimeout(() => setSuccessMessage(''), 5000)
-      
+
+      // Recarregar dados da página após processamento
+      await loadPedidos()
+
     } catch (err) {
       console.error('Erro ao gerar orçamento:', err)
       setError(err.response?.data?.detail || 'Erro ao gerar orçamento')
@@ -173,6 +191,7 @@ export default function SchoolDetails() {
       setShowDateModal(false)
       setDataEntrega('')
       setModoAgrupamento('unidade')
+      setGerarOp(true)
     }
   }
 
@@ -191,14 +210,14 @@ export default function SchoolDetails() {
       {/* ============================================ */}
       {/* HEADER PRINCIPAL */}
       {/* ============================================ */}
-      <header 
+      <header
         className={tw`flex-shrink-0 border-b`}
         style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
       >
         <div className={tw`flex items-center justify-between px-6 py-3`}>
           {/* Logo / Título */}
           <div className={tw`flex items-center gap-3`}>
-            <div 
+            <div
               className={tw`w-9 h-9 rounded-lg flex items-center justify-center`}
               style={{ backgroundColor: '#3b82f6' }}
             >
@@ -230,13 +249,13 @@ export default function SchoolDetails() {
       {/* ============================================ */}
       {/* BREADCRUMB + TÍTULO DA PÁGINA */}
       {/* ============================================ */}
-      <div 
+      <div
         className={tw`flex-shrink-0 border-b px-6 py-4`}
         style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
       >
         {/* Breadcrumb */}
         <div className={tw`flex items-center gap-2 text-sm mb-3`}>
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             className={tw`flex items-center gap-1 hover:underline`}
             style={{ color: '#3b82f6' }}
@@ -293,15 +312,15 @@ export default function SchoolDetails() {
       {/* BARRA DE AÇÕES */}
       {/* ============================================ */}
       {!loading && divisoes.length > 0 && (
-        <div 
+        <div
           className={tw`flex-shrink-0 px-6 py-3 flex items-center justify-between border-b`}
           style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
         >
           {/* Contador de seleção */}
           <div className={tw`flex items-center gap-3`}>
-            <div 
+            <div
               className={tw`px-3 py-1.5 rounded-full text-sm font-medium`}
-              style={{ 
+              style={{
                 backgroundColor: selectedItems.size > 0 ? '#dbeafe' : '#f1f5f9',
                 color: selectedItems.size > 0 ? '#1d4ed8' : '#64748b'
               }}
@@ -310,32 +329,48 @@ export default function SchoolDetails() {
             </div>
           </div>
 
-          {/* Botão de Ação Principal */}
-          <button
-            onClick={() => setShowDateModal(true)}
-            disabled={selectedItems.size === 0 || generatingBudget}
-            className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${
-              selectedItems.size === 0 || generatingBudget
+          <div className={tw`flex items-center gap-3`}>
+            {/* Botão Recarregar */}
+            <button
+              onClick={handleRefresh}
+              disabled={loading || refreshing || generatingBudget}
+              className={tw`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-50`}
+              style={{ borderColor: '#e2e8f0', color: '#3b82f6', backgroundColor: '#ffffff' }}
+              title="Recarregar dados"
+            >
+              <Icons.Refresh
+                className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                style={{ color: '#3b82f6' }}
+              />
+              Recarregar
+            </button>
+
+            {/* Botão de Ação Principal */}
+            <button
+              onClick={() => setShowDateModal(true)}
+              disabled={selectedItems.size === 0 || generatingBudget}
+              className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${selectedItems.size === 0 || generatingBudget
                 ? 'cursor-not-allowed'
                 : 'hover:shadow-md active:scale-[0.98]'
-            }`}
-            style={{
-              backgroundColor: selectedItems.size === 0 ? '#e2e8f0' : '#10b981',
-              color: selectedItems.size === 0 ? '#94a3b8' : '#ffffff'
-            }}
-          >
-            {generatingBudget ? (
-              <>
-                <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
-                Gerando...
-              </>
-            ) : (
-              <>
-                <Icons.DocumentCheck className={tw`w-4 h-4`} />
-                Gerar Orçamento
-              </>
-            )}
-          </button>
+                }`}
+              style={{
+                backgroundColor: selectedItems.size === 0 ? '#e2e8f0' : '#10b981',
+                color: selectedItems.size === 0 ? '#94a3b8' : '#ffffff'
+              }}
+            >
+              {generatingBudget ? (
+                <>
+                  <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <Icons.DocumentCheck className={tw`w-4 h-4`} />
+                  Gerar Orçamento
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
@@ -345,7 +380,7 @@ export default function SchoolDetails() {
       {(error || successMessage) && (
         <div className={tw`flex-shrink-0 px-6 py-3`}>
           {error && (
-            <div 
+            <div
               className={tw`flex items-center gap-3 px-4 py-3 rounded-lg`}
               style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}
             >
@@ -354,7 +389,7 @@ export default function SchoolDetails() {
             </div>
           )}
           {successMessage && (
-            <div 
+            <div
               className={tw`flex items-center gap-3 px-4 py-3 rounded-lg`}
               style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}
             >
@@ -380,7 +415,7 @@ export default function SchoolDetails() {
         {/* Empty State */}
         {!loading && !error && divisoes.length === 0 && (
           <div className={tw`flex flex-col items-center justify-center h-full`}>
-            <div 
+            <div
               className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
               style={{ backgroundColor: '#f1f5f9' }}
             >
@@ -405,7 +440,7 @@ export default function SchoolDetails() {
 
         {/* Tree Grid */}
         {!loading && divisoes.length > 0 && (
-          <TreeGrid 
+          <TreeGrid
             data={divisoes}
             onSelectionChange={handleSelectionChange}
           />
@@ -415,145 +450,158 @@ export default function SchoolDetails() {
       {/* ============================================ */}
       {/* MODAL DATA DE SAÍDA */}
       {/* ============================================ */}
-      {showDateModal && (
-        <div 
-          className={tw`fixed inset-0 z-50 flex items-center justify-center`}
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={() => !generatingBudget && setShowDateModal(false)}
-        >
-          <div 
-            className={tw`bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4`}
-            onClick={e => e.stopPropagation()}
+      {
+        showDateModal && (
+          <div
+            className={tw`fixed inset-0 z-50 flex items-center justify-center`}
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            onClick={() => !generatingBudget && setShowDateModal(false)}
           >
-            {/* Header */}
-            <div className={tw`flex items-center gap-3 mb-5`}>
-              <div 
-                className={tw`w-10 h-10 rounded-lg flex items-center justify-center`}
-                style={{ backgroundColor: '#dbeafe' }}
+            <div
+              className={tw`bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4`}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className={tw`flex items-center gap-3 mb-5`}>
+                <div
+                  className={tw`w-10 h-10 rounded-lg flex items-center justify-center`}
+                  style={{ backgroundColor: '#dbeafe' }}
+                >
+                  <Icons.DocumentCheck className={tw`w-5 h-5`} style={{ color: '#3b82f6' }} />
+                </div>
+                <div>
+                  <h3 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>Gerar Orçamento</h3>
+                  <p className={tw`text-sm`} style={{ color: '#64748b' }}>Defina a data de saída do pedido</p>
+                </div>
+              </div>
+
+              {/* Campo de Data */}
+              <div className={tw`mb-6`}>
+                <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
+                  Data de Saída
+                </label>
+                <input
+                  type="date"
+                  value={dataEntrega}
+                  onChange={e => setDataEntrega(e.target.value)}
+                  className={tw`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-colors`}
+                  style={{
+                    borderColor: '#e2e8f0',
+                    color: '#0f172a'
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                  min={new Date().toISOString().split('T')[0]}
+                  disabled={generatingBudget}
+                />
+                <p className={tw`mt-1.5 text-xs`} style={{ color: '#94a3b8' }}>
+                  Se não informada, será usada a data de hoje + 7 dias
+                </p>
+              </div>
+
+              {/* Modo de Agrupamento */}
+              <div className={tw`mb-6`}>
+                <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
+                  Modo de Agrupamento
+                </label>
+                <div className={tw`flex gap-3`}>
+                  <button
+                    type="button"
+                    onClick={() => setModoAgrupamento('unidade')}
+                    disabled={generatingBudget}
+                    className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
+                    style={{
+                      borderColor: modoAgrupamento === 'unidade' ? '#3b82f6' : '#e2e8f0',
+                      backgroundColor: modoAgrupamento === 'unidade' ? '#eff6ff' : '#ffffff',
+                      color: modoAgrupamento === 'unidade' ? '#1d4ed8' : '#64748b',
+                      boxShadow: modoAgrupamento === 'unidade' ? '0 0 0 1px #3b82f6' : 'none'
+                    }}
+                  >
+                    <div className={tw`font-semibold mb-1`}>Por Unidade</div>
+                    <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                      1 orçamento por unidade escolar
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModoAgrupamento('escola')}
+                    disabled={generatingBudget}
+                    className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
+                    style={{
+                      borderColor: modoAgrupamento === 'escola' ? '#3b82f6' : '#e2e8f0',
+                      backgroundColor: modoAgrupamento === 'escola' ? '#eff6ff' : '#ffffff',
+                      color: modoAgrupamento === 'escola' ? '#1d4ed8' : '#64748b',
+                      boxShadow: modoAgrupamento === 'escola' ? '0 0 0 1px #3b82f6' : 'none'
+                    }}
+                  >
+                    <div className={tw`font-semibold mb-1`}>Por Escola</div>
+                    <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                      Agrupa e soma todas as unidades
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Toggle Gerar OP */}
+              <div
+                className={tw`mb-6 px-4 py-3 rounded-lg`}
+                style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
               >
-                <Icons.DocumentCheck className={tw`w-5 h-5`} style={{ color: '#3b82f6' }} />
+                <ToggleGerarOP
+                  value={gerarOp}
+                  onChange={setGerarOp}
+                  disabled={generatingBudget}
+                />
               </div>
-              <div>
-                <h3 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>Gerar Orçamento</h3>
-                <p className={tw`text-sm`} style={{ color: '#64748b' }}>Defina a data de saída do pedido</p>
+
+              {/* Info da seleção */}
+              <div
+                className={tw`mb-6 px-4 py-3 rounded-lg`}
+                style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+              >
+                <p className={tw`text-sm`} style={{ color: '#64748b' }}>
+                  <span className={tw`font-semibold`} style={{ color: '#334155' }}>{selectedItems.size}</span>
+                  {' '}{selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'} para o orçamento
+                </p>
               </div>
-            </div>
 
-            {/* Campo de Data */}
-            <div className={tw`mb-6`}>
-              <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
-                Data de Saída
-              </label>
-              <input
-                type="date"
-                value={dataEntrega}
-                onChange={e => setDataEntrega(e.target.value)}
-                className={tw`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-colors`}
-                style={{ 
-                  borderColor: '#e2e8f0',
-                  color: '#0f172a'
-                }}
-                onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-                min={new Date().toISOString().split('T')[0]}
-                disabled={generatingBudget}
-              />
-              <p className={tw`mt-1.5 text-xs`} style={{ color: '#94a3b8' }}>
-                Se não informada, será usada a data de hoje + 7 dias
-              </p>
-            </div>
-
-            {/* Modo de Agrupamento */}
-            <div className={tw`mb-6`}>
-              <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
-                Modo de Agrupamento
-              </label>
+              {/* Botões */}
               <div className={tw`flex gap-3`}>
                 <button
-                  type="button"
-                  onClick={() => setModoAgrupamento('unidade')}
+                  onClick={() => { setShowDateModal(false); setDataEntrega(''); setModoAgrupamento('unidade'); setGerarOp(true) }}
                   disabled={generatingBudget}
-                  className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
-                  style={{
-                    borderColor: modoAgrupamento === 'unidade' ? '#3b82f6' : '#e2e8f0',
-                    backgroundColor: modoAgrupamento === 'unidade' ? '#eff6ff' : '#ffffff',
-                    color: modoAgrupamento === 'unidade' ? '#1d4ed8' : '#64748b',
-                    boxShadow: modoAgrupamento === 'unidade' ? '0 0 0 1px #3b82f6' : 'none'
-                  }}
+                  className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors hover:bg-gray-50`}
+                  style={{ borderColor: '#e2e8f0', color: '#64748b' }}
                 >
-                  <div className={tw`font-semibold mb-1`}>Por Unidade</div>
-                  <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
-                    1 orçamento por unidade escolar
-                  </div>
+                  Cancelar
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setModoAgrupamento('escola')}
+                  onClick={handleGenerateBudget}
                   disabled={generatingBudget}
-                  className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
+                  className={tw`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${generatingBudget ? 'cursor-not-allowed' : 'hover:shadow-md active:scale-[0.98]'
+                    }`}
                   style={{
-                    borderColor: modoAgrupamento === 'escola' ? '#3b82f6' : '#e2e8f0',
-                    backgroundColor: modoAgrupamento === 'escola' ? '#eff6ff' : '#ffffff',
-                    color: modoAgrupamento === 'escola' ? '#1d4ed8' : '#64748b',
-                    boxShadow: modoAgrupamento === 'escola' ? '0 0 0 1px #3b82f6' : 'none'
+                    backgroundColor: generatingBudget ? '#86efac' : '#10b981',
+                    color: '#ffffff'
                   }}
                 >
-                  <div className={tw`font-semibold mb-1`}>Por Escola</div>
-                  <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
-                    Agrupa e soma todas as unidades
-                  </div>
+                  {generatingBudget ? (
+                    <>
+                      <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <Icons.DocumentCheck className={tw`w-4 h-4`} />
+                      Confirmar e Gerar
+                    </>
+                  )}
                 </button>
               </div>
             </div>
-
-            {/* Info da seleção */}
-            <div 
-              className={tw`mb-6 px-4 py-3 rounded-lg`}
-              style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
-            >
-              <p className={tw`text-sm`} style={{ color: '#64748b' }}>
-                <span className={tw`font-semibold`} style={{ color: '#334155' }}>{selectedItems.size}</span>
-                {' '}{selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'} para o orçamento
-              </p>
-            </div>
-
-            {/* Botões */}
-            <div className={tw`flex gap-3`}>
-              <button
-                onClick={() => { setShowDateModal(false); setDataEntrega(''); setModoAgrupamento('unidade') }}
-                disabled={generatingBudget}
-                className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors hover:bg-gray-50`}
-                style={{ borderColor: '#e2e8f0', color: '#64748b' }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleGenerateBudget}
-                disabled={generatingBudget}
-                className={tw`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  generatingBudget ? 'cursor-not-allowed' : 'hover:shadow-md active:scale-[0.98]'
-                }`}
-                style={{
-                  backgroundColor: generatingBudget ? '#86efac' : '#10b981',
-                  color: '#ffffff'
-                }}
-              >
-                {generatingBudget ? (
-                  <>
-                    <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <Icons.DocumentCheck className={tw`w-4 h-4`} />
-                    Confirmar e Gerar
-                  </>
-                )}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   )
 }
