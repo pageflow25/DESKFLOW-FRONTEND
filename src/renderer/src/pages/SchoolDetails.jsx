@@ -132,11 +132,10 @@ export default function SchoolDetails() {
             const divisao = divisoes[divIndex]
 
             // Capturar divisão logística e dias úteis
-            if (divisao.divisao_logistica && divisao.divisao_logistica !== 'Sem divisão') {
+            if (divisao.divisao_logistica) {
               divisoesLogistica.add(divisao.divisao_logistica)
             }
             if (divisao.dias_uteis && divisao.dias_uteis !== 'Sem dias uteis') {
-              // Converter para número se possível
               const diasUteisNum = parseInt(divisao.dias_uteis)
               if (!isNaN(diasUteisNum)) {
                 diasUteis.add(diasUteisNum)
@@ -145,17 +144,15 @@ export default function SchoolDetails() {
 
             idsProdutos.add(produto.id_produto)
 
+            // CORRIGIDO: datas são extraídas APENAS de nós 'data' (nunca do nó 'produto').
+            // Quando o usuário seleciona um produto ou divisão, o TreeGrid já propaga
+            // a seleção para todos os nós filhos de data — então eles estarão em
+            // selectedItems e suas datas serão capturadas na iteração de nós 'data'.
             if (parts.includes('data')) {
               const dataIndex = parseInt(parts[5])
               if (produto.datas[dataIndex] && produto.datas[dataIndex].data_saida !== 'Sem data saida') {
                 datasSaida.add(produto.datas[dataIndex].data_saida)
               }
-            } else {
-              produto.datas.forEach(data => {
-                if (data.data_saida !== 'Sem data saida') {
-                  datasSaida.add(data.data_saida)
-                }
-              })
             }
           }
         }
