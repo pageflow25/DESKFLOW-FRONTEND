@@ -79,6 +79,8 @@ export default function SchoolDetails() {
   const [modoAgrupamento, setModoAgrupamento] = useState('unidade')
   const [gerarOp, setGerarOp] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [idsFormularios, setIdsFormularios] = useState('')
+  const [statusIds, setStatusIds] = useState('1')
 
   useEffect(() => {
     loadPedidos()
@@ -88,7 +90,15 @@ export default function SchoolDetails() {
     try {
       setLoading(true)
       setError('')
-      const data = await pedidoService.getPedidosEscolaCascata(parseInt(escolaId), nomeEscola.toUpperCase())
+      // Parsear ids_formularios se fornecidos
+      const parsedIds = idsFormularios
+        ? idsFormularios.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+        : null
+      // Parsear status_ids se fornecidos
+      const parsedStatusIds = statusIds
+        ? statusIds.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+        : null
+      const data = await pedidoService.getPedidosEscolaCascata(parseInt(escolaId), nomeEscola.toUpperCase(), parsedIds, parsedStatusIds)
       setDivisoes(data.dashboard_completo || [])
     } catch (err) {
       console.error('Erro ao carregar pedidos:', err)
@@ -163,6 +173,16 @@ export default function SchoolDetails() {
         ? `${dataEntrega}T12:00:00.000-03:00`
         : null
 
+      // Parsear ids_formularios se fornecidos
+      const parsedIdsFormularios = idsFormularios
+        ? idsFormularios.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+        : null
+
+      // Parsear status_ids se fornecidos
+      const parsedStatusIds = statusIds
+        ? statusIds.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+        : null
+
       const result = await orcamentoService.gerarOrcamento(
         parseInt(escolaId),
         Array.from(idsProdutos),
@@ -171,10 +191,12 @@ export default function SchoolDetails() {
         diasUteis.size > 0 ? Array.from(diasUteis) : null,
         dataEntregaFormatada,
         modoAgrupamento,
-        gerarOp
+        gerarOp,
+        parsedIdsFormularios,
+        parsedStatusIds
       )
 
-      setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}`)
+      setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}${result.grupo_lote_id ? ` — Lote #${result.grupo_lote_id}` : ''}`)
       setTimeout(() => setSuccessMessage(''), 5000)
 
       // Recarregar dados da página após processamento
@@ -313,7 +335,7 @@ export default function SchoolDetails() {
           className={tw`flex-shrink-0 px-6 py-3 flex items-center justify-between border-b`}
           style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
         >
-          {/* Contador de seleção */}
+          {/* Contador de seleção + Filtro de Formulários */}
           <div className={tw`flex items-center gap-3`}>
             <div
               className={tw`px-3 py-1.5 rounded-full text-sm font-medium`}
@@ -323,6 +345,75 @@ export default function SchoolDetails() {
               }}
             >
               {selectedItems.size} {selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'}
+            </div>
+
+            {/* Filtro por IDs de Formulários */}
+            <div className={tw`flex items-center gap-2`}>
+              <input
+                type="text"
+                value={idsFormularios}
+                onChange={e => setIdsFormularios(e.target.value)}
+                placeholder="Filtrar por IDs formulários (ex: 1,2,3)"
+                className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
+                style={{
+                  borderColor: idsFormularios ? '#3b82f6' : '#e2e8f0',
+                  color: '#0f172a',
+                  width: '280px',
+                  backgroundColor: idsFormularios ? '#eff6ff' : '#ffffff'
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = idsFormularios ? '#3b82f6' : '#e2e8f0'}
+                disabled={generatingBudget}
+              />
+              {idsFormularios && (
+                <button
+                  onClick={() => { setIdsFormularios(''); setTimeout(() => loadPedidos(), 100) }}
+                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:bg-red-50`}
+                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                  title="Limpar filtro"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Filtro por Status IDs */}
+            <div className={tw`flex items-center gap-2`}>
+              <input
+                type="text"
+                value={statusIds}
+                onChange={e => setStatusIds(e.target.value)}
+                placeholder="Status IDs (ex: 1,2,3)"
+                className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
+                style={{
+                  borderColor: statusIds && statusIds !== '1' ? '#f59e0b' : '#e2e8f0',
+                  color: '#0f172a',
+                  width: '180px',
+                  backgroundColor: statusIds && statusIds !== '1' ? '#fffbeb' : '#ffffff'
+                }}
+                onFocus={e => e.target.style.borderColor = '#f59e0b'}
+                onBlur={e => e.target.style.borderColor = statusIds && statusIds !== '1' ? '#f59e0b' : '#e2e8f0'}
+                disabled={generatingBudget}
+              />
+              {statusIds && statusIds !== '1' && (
+                <button
+                  onClick={() => { setStatusIds('1'); setTimeout(() => loadPedidos(), 100) }}
+                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:bg-red-50`}
+                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                  title="Restaurar padrão (1)"
+                >
+                  ✕
+                </button>
+              )}
+              <button
+                onClick={() => loadPedidos()}
+                disabled={loading || generatingBudget}
+                className={tw`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors hover:bg-blue-50 disabled:opacity-50`}
+                style={{ borderColor: '#93c5fd', color: '#2563eb', backgroundColor: '#eff6ff' }}
+                title="Aplicar filtro"
+              >
+                Filtrar
+              </button>
             </div>
           </div>
 

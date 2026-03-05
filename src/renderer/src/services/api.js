@@ -97,17 +97,22 @@ export const dashboardService = {
 
 // Serviço de pedidos em cascata
 export const pedidoService = {
-  getPedidosEscolaCascata: async (escolaId, tipoFormulario = 'MEMOREX') => {
-    const response = await api.get(`/api/pedidos/escola/${escolaId}/cascata`, {
-      params: { tipo_formulario: tipoFormulario }
-    })
+  getPedidosEscolaCascata: async (escolaId, tipoFormulario = 'MEMOREX', idsFormularios = null, statusIds = null) => {
+    const params = { tipo_formulario: tipoFormulario }
+    if (idsFormularios && idsFormularios.length > 0) {
+      params.ids_formularios = idsFormularios.join(',')
+    }
+    if (statusIds && statusIds.length > 0) {
+      params.status_ids = statusIds.join(',')
+    }
+    const response = await api.get(`/api/pedidos/escola/${escolaId}/cascata`, { params })
     return response.data
   }
 }
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null) => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
@@ -125,6 +130,12 @@ export const orcamentoService = {
     }
     if (dataEntrega) {
       payload.data_entrega = dataEntrega
+    }
+    if (idsFormularios && idsFormularios.length > 0) {
+      payload.ids_formularios = idsFormularios
+    }
+    if (statusIds && statusIds.length > 0) {
+      payload.status_ids = statusIds
     }
     
     const response = await api.post('/api/orcamento/gerar', payload)
