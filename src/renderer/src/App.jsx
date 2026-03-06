@@ -1,6 +1,7 @@
 import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import UpdateNotice from './components/UpdateNotice'
 import Login from './pages/Login'
@@ -33,6 +34,7 @@ function AuthEventListener() {
 function App() {
   return (
     <Router>
+      <ThemeProvider>
       <AuthProvider>
         <UpdateNotice />
         <AuthEventListener />
@@ -57,6 +59,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
+      </ThemeProvider>
     </Router>
   )
 }

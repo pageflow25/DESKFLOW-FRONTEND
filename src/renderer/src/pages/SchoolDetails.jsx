@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { pedidoService, orcamentoService } from '../services/api'
 import { tw } from '@twind/core'
 import TreeGrid from '../components/TreeGrid'
@@ -55,6 +56,16 @@ const Icons = {
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
     </svg>
+  ),
+  Sun: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  ),
+  Moon: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+    </svg>
   )
 }
 
@@ -66,6 +77,7 @@ export default function SchoolDetails() {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout, user } = useAuth()
+  const { isDark, toggleTheme, colors: c } = useTheme()
   const nomeEscola = location.state?.nomeEscola || 'MEMOREX'
 
   const [divisoes, setDivisoes] = useState([])
@@ -225,41 +237,52 @@ export default function SchoolDetails() {
   const totalQuantidade = divisoes.reduce((acc, d) => acc + (d.quantidade_total || 0), 0)
 
   return (
-    <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: '#f1f5f9' }}>
+    <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: c.pageBg }}>
       {/* ============================================ */}
       {/* HEADER PRINCIPAL */}
       {/* ============================================ */}
       <header
         className={tw`flex-shrink-0 border-b`}
-        style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+        style={{ backgroundColor: c.headerBg, borderColor: c.border }}
       >
         <div className={tw`flex items-center justify-between px-6 py-3`}>
           {/* Logo / Título */}
           <div className={tw`flex items-center gap-3`}>
             <div
               className={tw`w-9 h-9 rounded-lg flex items-center justify-center`}
-              style={{ backgroundColor: '#3b82f6' }}
+              style={{ backgroundColor: c.accent }}
             >
               <Icons.School className={tw`w-5 h-5`} style={{ color: '#ffffff' }} />
             </div>
             <div>
-              <h1 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>DESKFLOW</h1>
-              <p className={tw`text-xs`} style={{ color: '#64748b' }}>Sistema de Gestão de Pedidos</p>
+              <h1 className={tw`text-lg font-bold`} style={{ color: c.textPrimary }}>DESKFLOW</h1>
+              <p className={tw`text-xs`} style={{ color: c.textSecondary }}>Sistema de Gestão de Pedidos</p>
             </div>
           </div>
 
-          {/* User Info + Logout */}
+          {/* User Info + Theme Toggle + Logout */}
           <div className={tw`flex items-center gap-4`}>
             <div className={tw`text-right`}>
-              <p className={tw`text-sm font-medium`} style={{ color: '#334155' }}>{user?.name || 'Usuário'}</p>
-              <p className={tw`text-xs`} style={{ color: '#94a3b8' }}>Logado</p>
+              <p className={tw`text-sm font-medium`} style={{ color: c.textPrimary }}>{user?.name || 'Usuário'}</p>
+              <p className={tw`text-xs`} style={{ color: c.textMuted }}>Logado</p>
             </div>
             <button
+              onClick={toggleTheme}
+              className={tw`p-2 rounded-lg transition-colors`}
+              style={{ color: c.textSecondary }}
+              title={isDark ? 'Modo claro' : 'Modo escuro'}
+            >
+              {isDark
+                ? <Icons.Sun className={tw`w-5 h-5`} />
+                : <Icons.Moon className={tw`w-5 h-5`} />
+              }
+            </button>
+            <button
               onClick={handleLogout}
-              className={tw`p-2 rounded-lg hover:bg-gray-100 transition-colors`}
+              className={tw`p-2 rounded-lg transition-colors`}
               title="Sair"
             >
-              <Icons.Logout className={tw`w-5 h-5`} style={{ color: '#64748b' }} />
+              <Icons.Logout className={tw`w-5 h-5`} style={{ color: c.textSecondary }} />
             </button>
           </div>
         </div>
@@ -270,20 +293,20 @@ export default function SchoolDetails() {
       {/* ============================================ */}
       <div
         className={tw`flex-shrink-0 border-b px-6 py-4`}
-        style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+        style={{ backgroundColor: c.cardBg, borderColor: c.border }}
       >
         {/* Breadcrumb */}
         <div className={tw`flex items-center gap-2 text-sm mb-3`}>
           <button
             onClick={() => navigate('/dashboard')}
             className={tw`flex items-center gap-1 hover:underline`}
-            style={{ color: '#3b82f6' }}
+            style={{ color: c.accent }}
           >
             <Icons.Home className={tw`w-4 h-4`} />
             Dashboard
           </button>
-          <span style={{ color: '#cbd5e1' }}>/</span>
-          <span style={{ color: '#64748b' }}>Escola #{escolaId}</span>
+          <span style={{ color: c.border }}>/</span>
+          <span style={{ color: c.textSecondary }}>Escola #{escolaId}</span>
         </div>
 
         {/* Título + Ações */}
@@ -291,17 +314,17 @@ export default function SchoolDetails() {
           <div className={tw`flex items-center gap-4`}>
             <button
               onClick={() => navigate('/dashboard')}
-              className={tw`p-2 rounded-lg border hover:bg-gray-50 transition-colors`}
-              style={{ borderColor: '#e2e8f0' }}
+              className={tw`p-2 rounded-lg border transition-colors`}
+              style={{ borderColor: c.border }}
               title="Voltar"
             >
-              <Icons.ArrowLeft className={tw`w-5 h-5`} style={{ color: '#64748b' }} />
+              <Icons.ArrowLeft className={tw`w-5 h-5`} style={{ color: c.textSecondary }} />
             </button>
             <div>
-              <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>
+              <h2 className={tw`text-xl font-bold`} style={{ color: c.textPrimary }}>
                 Detalhes da Escola
               </h2>
-              <p className={tw`text-sm`} style={{ color: '#64748b' }}>
+              <p className={tw`text-sm`} style={{ color: c.textSecondary }}>
                 Selecione os itens para gerar orçamento
               </p>
             </div>
@@ -311,16 +334,16 @@ export default function SchoolDetails() {
           {!loading && divisoes.length > 0 && (
             <div className={tw`flex items-center gap-6`}>
               <div className={tw`text-center`}>
-                <p className={tw`text-2xl font-bold`} style={{ color: '#0f172a' }}>{totalDivisoes}</p>
-                <p className={tw`text-xs`} style={{ color: '#64748b' }}>Divisões</p>
+                <p className={tw`text-2xl font-bold`} style={{ color: c.textPrimary }}>{totalDivisoes}</p>
+                <p className={tw`text-xs`} style={{ color: c.textSecondary }}>Divisões</p>
               </div>
               <div className={tw`text-center`}>
-                <p className={tw`text-2xl font-bold`} style={{ color: '#0f172a' }}>{totalProdutos}</p>
-                <p className={tw`text-xs`} style={{ color: '#64748b' }}>Produtos</p>
+                <p className={tw`text-2xl font-bold`} style={{ color: c.textPrimary }}>{totalProdutos}</p>
+                <p className={tw`text-xs`} style={{ color: c.textSecondary }}>Produtos</p>
               </div>
               <div className={tw`text-center`}>
-                <p className={tw`text-2xl font-bold`} style={{ color: '#3b82f6' }}>{totalQuantidade}</p>
-                <p className={tw`text-xs`} style={{ color: '#64748b' }}>Total Qtd</p>
+                <p className={tw`text-2xl font-bold`} style={{ color: c.accent }}>{totalQuantidade}</p>
+                <p className={tw`text-xs`} style={{ color: c.textSecondary }}>Total Qtd</p>
               </div>
             </div>
           )}
@@ -333,15 +356,15 @@ export default function SchoolDetails() {
       {!loading && divisoes.length > 0 && (
         <div
           className={tw`flex-shrink-0 px-6 py-3 flex items-center justify-between border-b`}
-          style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+          style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
         >
           {/* Contador de seleção + Filtro de Formulários */}
           <div className={tw`flex items-center gap-3`}>
             <div
               className={tw`px-3 py-1.5 rounded-full text-sm font-medium`}
               style={{
-                backgroundColor: selectedItems.size > 0 ? '#dbeafe' : '#f1f5f9',
-                color: selectedItems.size > 0 ? '#1d4ed8' : '#64748b'
+                backgroundColor: selectedItems.size > 0 ? c.accentBg : c.sectionBg,
+                color: selectedItems.size > 0 ? c.accentText : c.textSecondary
               }}
             >
               {selectedItems.size} {selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'}
@@ -356,20 +379,20 @@ export default function SchoolDetails() {
                 placeholder="Filtrar por IDs formulários (ex: 1,2,3)"
                 className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
                 style={{
-                  borderColor: idsFormularios ? '#3b82f6' : '#e2e8f0',
-                  color: '#0f172a',
+                  borderColor: idsFormularios ? c.accent : c.border,
+                  color: c.textPrimary,
                   width: '280px',
-                  backgroundColor: idsFormularios ? '#eff6ff' : '#ffffff'
+                  backgroundColor: idsFormularios ? c.accentBg : c.inputBg
                 }}
-                onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                onBlur={e => e.target.style.borderColor = idsFormularios ? '#3b82f6' : '#e2e8f0'}
+                onFocus={e => e.target.style.borderColor = c.accent}
+                onBlur={e => e.target.style.borderColor = idsFormularios ? c.accent : c.border}
                 disabled={generatingBudget}
               />
               {idsFormularios && (
                 <button
                   onClick={() => { setIdsFormularios(''); setTimeout(() => loadPedidos(), 100) }}
-                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:bg-red-50`}
-                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors`}
+                  style={{ borderColor: c.errorBorder, color: c.errorText }}
                   title="Limpar filtro"
                 >
                   ✕
@@ -386,20 +409,20 @@ export default function SchoolDetails() {
                 placeholder="Status IDs (ex: 1,2,3)"
                 className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
                 style={{
-                  borderColor: statusIds && statusIds !== '1' ? '#f59e0b' : '#e2e8f0',
-                  color: '#0f172a',
+                  borderColor: statusIds && statusIds !== '1' ? c.warningText : c.border,
+                  color: c.textPrimary,
                   width: '180px',
-                  backgroundColor: statusIds && statusIds !== '1' ? '#fffbeb' : '#ffffff'
+                  backgroundColor: statusIds && statusIds !== '1' ? c.warningBg : c.inputBg
                 }}
-                onFocus={e => e.target.style.borderColor = '#f59e0b'}
-                onBlur={e => e.target.style.borderColor = statusIds && statusIds !== '1' ? '#f59e0b' : '#e2e8f0'}
+                onFocus={e => e.target.style.borderColor = c.warningText}
+                onBlur={e => e.target.style.borderColor = statusIds && statusIds !== '1' ? c.warningText : c.border}
                 disabled={generatingBudget}
               />
               {statusIds && statusIds !== '1' && (
                 <button
                   onClick={() => { setStatusIds('1'); setTimeout(() => loadPedidos(), 100) }}
-                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:bg-red-50`}
-                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors`}
+                  style={{ borderColor: c.errorBorder, color: c.errorText }}
                   title="Restaurar padrão (1)"
                 >
                   ✕
@@ -408,8 +431,8 @@ export default function SchoolDetails() {
               <button
                 onClick={() => loadPedidos()}
                 disabled={loading || generatingBudget}
-                className={tw`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors hover:bg-blue-50 disabled:opacity-50`}
-                style={{ borderColor: '#93c5fd', color: '#2563eb', backgroundColor: '#eff6ff' }}
+                className={tw`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50`}
+                style={{ borderColor: c.accent, color: c.accentText, backgroundColor: c.accentBg }}
                 title="Aplicar filtro"
               >
                 Filtrar
@@ -422,13 +445,13 @@ export default function SchoolDetails() {
             <button
               onClick={handleRefresh}
               disabled={loading || refreshing || generatingBudget}
-              className={tw`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-50`}
-              style={{ borderColor: '#e2e8f0', color: '#3b82f6', backgroundColor: '#ffffff' }}
+              className={tw`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm border transition-all active:scale-[0.97] disabled:opacity-50`}
+              style={{ borderColor: c.border, color: c.accent, backgroundColor: c.cardBg }}
               title="Recarregar dados"
             >
               <Icons.Refresh
                 className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-                style={{ color: '#3b82f6' }}
+                style={{ color: c.accent }}
               />
               Recarregar
             </button>
@@ -442,8 +465,8 @@ export default function SchoolDetails() {
                 : 'hover:shadow-md active:scale-[0.98]'
                 }`}
               style={{
-                backgroundColor: selectedItems.size === 0 ? '#e2e8f0' : '#10b981',
-                color: selectedItems.size === 0 ? '#94a3b8' : '#ffffff'
+                backgroundColor: selectedItems.size === 0 ? c.disabledBg : c.successBg2,
+                color: selectedItems.size === 0 ? c.disabledText : '#ffffff'
               }}
             >
               {generatingBudget ? (
@@ -470,19 +493,19 @@ export default function SchoolDetails() {
           {error && (
             <div
               className={tw`flex items-center gap-3 px-4 py-3 rounded-lg`}
-              style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}
+              style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}` }}
             >
-              <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: '#dc2626' }} />
-              <p className={tw`text-sm`} style={{ color: '#dc2626' }}>{error}</p>
+              <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.errorText }} />
+              <p className={tw`text-sm`} style={{ color: c.errorText }}>{error}</p>
             </div>
           )}
           {successMessage && (
             <div
               className={tw`flex items-center gap-3 px-4 py-3 rounded-lg`}
-              style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}
+              style={{ backgroundColor: c.successBg, border: `1px solid ${c.successBorder}` }}
             >
-              <Icons.CheckCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: '#16a34a' }} />
-              <p className={tw`text-sm font-medium`} style={{ color: '#16a34a' }}>{successMessage}</p>
+              <Icons.CheckCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.successText }} />
+              <p className={tw`text-sm font-medium`} style={{ color: c.successText }}>{successMessage}</p>
             </div>
           )}
         </div>
@@ -495,8 +518,8 @@ export default function SchoolDetails() {
         {/* Loading State */}
         {loading && (
           <div className={tw`flex flex-col items-center justify-center h-full`}>
-            <Icons.Spinner className={tw`w-10 h-10 animate-spin mb-4`} style={{ color: '#3b82f6' }} />
-            <p className={tw`text-sm font-medium`} style={{ color: '#64748b' }}>Carregando pedidos...</p>
+            <Icons.Spinner className={tw`w-10 h-10 animate-spin mb-4`} style={{ color: c.accent }} />
+            <p className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>Carregando pedidos...</p>
           </div>
         )}
 
@@ -505,20 +528,20 @@ export default function SchoolDetails() {
           <div className={tw`flex flex-col items-center justify-center h-full`}>
             <div
               className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
-              style={{ backgroundColor: '#f1f5f9' }}
+              style={{ backgroundColor: c.sectionBg }}
             >
-              <Icons.School className={tw`w-10 h-10`} style={{ color: '#cbd5e1' }} />
+              <Icons.School className={tw`w-10 h-10`} style={{ color: c.emptyIcon }} />
             </div>
-            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: '#334155' }}>
+            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: c.textPrimary }}>
               Nenhum pedido encontrado
             </h3>
-            <p className={tw`text-sm mb-6 text-center max-w-md`} style={{ color: '#64748b' }}>
-              Esta escola não possui pedidos do tipo "Elite" cadastrados no sistema.
+            <p className={tw`text-sm mb-6 text-center max-w-md`} style={{ color: c.textSecondary }}>
+              Esta escola não possui pedidos do tipo “Elite” cadastrados no sistema.
             </p>
             <button
               onClick={() => navigate('/dashboard')}
               className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm`}
-              style={{ backgroundColor: '#3b82f6', color: '#ffffff' }}
+              style={{ backgroundColor: c.accent, color: '#ffffff' }}
             >
               <Icons.ArrowLeft className={tw`w-4 h-4`} />
               Voltar ao Dashboard
@@ -542,30 +565,31 @@ export default function SchoolDetails() {
         showDateModal && (
           <div
             className={tw`fixed inset-0 z-50 flex items-center justify-center`}
-            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            style={{ backgroundColor: c.modalOverlay }}
             onClick={() => !generatingBudget && setShowDateModal(false)}
           >
             <div
-              className={tw`bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4`}
+              className={tw`rounded-xl shadow-2xl p-6 w-full max-w-md mx-4`}
+              style={{ backgroundColor: c.modalBg }}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
               <div className={tw`flex items-center gap-3 mb-5`}>
                 <div
                   className={tw`w-10 h-10 rounded-lg flex items-center justify-center`}
-                  style={{ backgroundColor: '#dbeafe' }}
+                  style={{ backgroundColor: c.accentBg }}
                 >
-                  <Icons.DocumentCheck className={tw`w-5 h-5`} style={{ color: '#3b82f6' }} />
+                  <Icons.DocumentCheck className={tw`w-5 h-5`} style={{ color: c.accent }} />
                 </div>
                 <div>
-                  <h3 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>Gerar Orçamento</h3>
-                  <p className={tw`text-sm`} style={{ color: '#64748b' }}>Defina a data de saída do pedido</p>
+                  <h3 className={tw`text-lg font-bold`} style={{ color: c.textPrimary }}>Gerar Orçamento</h3>
+                  <p className={tw`text-sm`} style={{ color: c.textSecondary }}>Defina a data de saída do pedido</p>
                 </div>
               </div>
 
               {/* Campo de Data */}
               <div className={tw`mb-6`}>
-                <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
+                <label className={tw`block text-sm font-medium mb-2`} style={{ color: c.textPrimary }}>
                   Data de Saída
                 </label>
                 <input
@@ -574,22 +598,23 @@ export default function SchoolDetails() {
                   onChange={e => setDataEntrega(e.target.value)}
                   className={tw`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-colors`}
                   style={{
-                    borderColor: '#e2e8f0',
-                    color: '#0f172a'
+                    borderColor: c.border,
+                    color: c.textPrimary,
+                    backgroundColor: c.inputBg
                   }}
-                  onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                  onFocus={e => e.target.style.borderColor = c.accent}
+                  onBlur={e => e.target.style.borderColor = c.border}
                   min={new Date().toISOString().split('T')[0]}
                   disabled={generatingBudget}
                 />
-                <p className={tw`mt-1.5 text-xs`} style={{ color: '#94a3b8' }}>
+                <p className={tw`mt-1.5 text-xs`} style={{ color: c.textMuted }}>
                   Se não informada, será usada a data de hoje + 7 dias
                 </p>
               </div>
 
               {/* Modo de Agrupamento */}
               <div className={tw`mb-6`}>
-                <label className={tw`block text-sm font-medium mb-2`} style={{ color: '#334155' }}>
+                <label className={tw`block text-sm font-medium mb-2`} style={{ color: c.textPrimary }}>
                   Modo de Agrupamento
                 </label>
                 <div className={tw`flex gap-3`}>
@@ -599,14 +624,14 @@ export default function SchoolDetails() {
                     disabled={generatingBudget}
                     className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
                     style={{
-                      borderColor: modoAgrupamento === 'unidade' ? '#3b82f6' : '#e2e8f0',
-                      backgroundColor: modoAgrupamento === 'unidade' ? '#eff6ff' : '#ffffff',
-                      color: modoAgrupamento === 'unidade' ? '#1d4ed8' : '#64748b',
-                      boxShadow: modoAgrupamento === 'unidade' ? '0 0 0 1px #3b82f6' : 'none'
+                      borderColor: modoAgrupamento === 'unidade' ? c.accent : c.border,
+                      backgroundColor: modoAgrupamento === 'unidade' ? c.accentBg : c.inputBg,
+                      color: modoAgrupamento === 'unidade' ? c.accentText : c.textSecondary,
+                      boxShadow: modoAgrupamento === 'unidade' ? `0 0 0 1px ${c.accent}` : 'none'
                     }}
                   >
                     <div className={tw`font-semibold mb-1`}>Por Unidade</div>
-                    <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                    <div className={tw`text-xs`} style={{ color: c.textMuted }}>
                       1 orçamento por unidade escolar
                     </div>
                   </button>
@@ -616,14 +641,14 @@ export default function SchoolDetails() {
                     disabled={generatingBudget}
                     className={tw`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
                     style={{
-                      borderColor: modoAgrupamento === 'escola' ? '#3b82f6' : '#e2e8f0',
-                      backgroundColor: modoAgrupamento === 'escola' ? '#eff6ff' : '#ffffff',
-                      color: modoAgrupamento === 'escola' ? '#1d4ed8' : '#64748b',
-                      boxShadow: modoAgrupamento === 'escola' ? '0 0 0 1px #3b82f6' : 'none'
+                      borderColor: modoAgrupamento === 'escola' ? c.accent : c.border,
+                      backgroundColor: modoAgrupamento === 'escola' ? c.accentBg : c.inputBg,
+                      color: modoAgrupamento === 'escola' ? c.accentText : c.textSecondary,
+                      boxShadow: modoAgrupamento === 'escola' ? `0 0 0 1px ${c.accent}` : 'none'
                     }}
                   >
                     <div className={tw`font-semibold mb-1`}>Por Escola</div>
-                    <div className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                    <div className={tw`text-xs`} style={{ color: c.textMuted }}>
                       Agrupa e soma todas as unidades
                     </div>
                   </button>
@@ -633,7 +658,7 @@ export default function SchoolDetails() {
               {/* Toggle Gerar OP */}
               <div
                 className={tw`mb-6 px-4 py-3 rounded-lg`}
-                style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+                style={{ backgroundColor: c.sectionBg, border: `1px solid ${c.border}` }}
               >
                 <ToggleGerarOP
                   value={gerarOp}
@@ -645,10 +670,10 @@ export default function SchoolDetails() {
               {/* Info da seleção */}
               <div
                 className={tw`mb-6 px-4 py-3 rounded-lg`}
-                style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+                style={{ backgroundColor: c.sectionBg, border: `1px solid ${c.border}` }}
               >
-                <p className={tw`text-sm`} style={{ color: '#64748b' }}>
-                  <span className={tw`font-semibold`} style={{ color: '#334155' }}>{selectedItems.size}</span>
+                <p className={tw`text-sm`} style={{ color: c.textSecondary }}>
+                  <span className={tw`font-semibold`} style={{ color: c.textPrimary }}>{selectedItems.size}</span>
                   {' '}{selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'} para o orçamento
                 </p>
               </div>
@@ -658,8 +683,8 @@ export default function SchoolDetails() {
                 <button
                   onClick={() => { setShowDateModal(false); setDataEntrega(''); setModoAgrupamento('unidade'); setGerarOp(true) }}
                   disabled={generatingBudget}
-                  className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors hover:bg-gray-50`}
-                  style={{ borderColor: '#e2e8f0', color: '#64748b' }}
+                  className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors`}
+                  style={{ borderColor: c.border, color: c.textSecondary }}
                 >
                   Cancelar
                 </button>
@@ -669,7 +694,7 @@ export default function SchoolDetails() {
                   className={tw`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${generatingBudget ? 'cursor-not-allowed' : 'hover:shadow-md active:scale-[0.98]'
                     }`}
                   style={{
-                    backgroundColor: generatingBudget ? '#86efac' : '#10b981',
+                    backgroundColor: generatingBudget ? c.successBorder : c.successBg2,
                     color: '#ffffff'
                   }}
                 >

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { tw } from '@twind/core'
+import { useTheme } from '../contexts/ThemeContext'
 
 // ============================================
 // ÍCONES SVG INLINE
@@ -48,6 +49,7 @@ const Icons = {
 export default function TreeGrid({ data = [], onSelectionChange }) {
   const [expanded, setExpanded] = useState(new Set())
   const [selected, setSelected] = useState(new Set())
+  const { colors: c } = useTheme()
 
   // Expandir todas as divisões por padrão
   useEffect(() => {
@@ -145,18 +147,18 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
       <div key={divId} className={tw`mb-3`}>
         {/* Header da Divisão */}
         <div 
-          className={tw`flex items-center rounded-t-lg border border-gray-200 ${nodeSelected ? 'bg-blue-50 border-blue-300' : 'bg-gradient-to-r from-slate-100 to-slate-50'}`}
+          className={tw`flex items-center rounded-t-lg border ${nodeSelected ? c.divSelectedBg : c.divGradient}`}
           style={{ minHeight: '48px' }}
         >
           {/* Expand/Collapse */}
           <button
             onClick={() => toggleExpand(divId)}
-            className={tw`w-10 h-12 flex items-center justify-center hover:bg-gray-200 rounded-l-lg transition-colors`}
+            className={tw`w-10 h-12 flex items-center justify-center rounded-l-lg transition-colors`}
           >
             {hasChildren && (
               nodeExpanded 
-                ? <Icons.ChevronDown className={tw`w-4 h-4`} style={{ color: '#6b7280' }} />
-                : <Icons.ChevronRight className={tw`w-4 h-4`} style={{ color: '#6b7280' }} />
+                ? <Icons.ChevronDown className={tw`w-4 h-4`} style={{ color: c.iconChevron }} />
+                : <Icons.ChevronRight className={tw`w-4 h-4`} style={{ color: c.iconChevron }} />
             )}
           </button>
 
@@ -172,8 +174,8 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
           {/* Ícone + Nome */}
           <div className={tw`flex items-center flex-1 px-3`}>
-            <Icons.Folder className={tw`w-5 h-5 mr-3 flex-shrink-0`} style={{ color: '#f59e0b' }} />
-            <span className={tw`font-semibold text-sm`} style={{ color: '#1e293b' }}>
+            <Icons.Folder className={tw`w-5 h-5 mr-3 flex-shrink-0`} style={{ color: c.iconFolder }} />
+            <span className={tw`font-semibold text-sm`} style={{ color: c.textPrimary }}>
               {divisao.divisao_logistica}
             </span>
           </div>
@@ -181,19 +183,19 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
           {/* Info */}
           <div className={tw`flex items-center gap-6 px-4`}>
             <div className={tw`text-right`}>
-              <span className={tw`text-xs`} style={{ color: '#64748b' }}>Dias úteis</span>
-              <p className={tw`font-medium text-sm`} style={{ color: '#334155' }}>{divisao.dias_uteis}</p>
+              <span className={tw`text-xs`} style={{ color: c.textMuted }}>Dias úteis</span>
+              <p className={tw`font-medium text-sm`} style={{ color: c.textSecondary }}>{divisao.dias_uteis}</p>
             </div>
             <div className={tw`text-right min-w-[80px]`}>
-              <span className={tw`text-xs`} style={{ color: '#64748b' }}>Quantidade</span>
-              <p className={tw`font-bold text-lg`} style={{ color: '#0f172a' }}>{divisao.quantidade_total}</p>
+              <span className={tw`text-xs`} style={{ color: c.textMuted }}>Quantidade</span>
+              <p className={tw`font-bold text-lg`} style={{ color: c.textPrimary }}>{divisao.quantidade_total}</p>
             </div>
           </div>
         </div>
 
         {/* Produtos (filhos) */}
         {nodeExpanded && hasChildren && (
-          <div className={tw`border-l border-r border-b border-gray-200 rounded-b-lg bg-white`}>
+          <div className={tw`border-l border-r border-b rounded-b-lg`} style={{ borderColor: c.border, backgroundColor: c.cardBg }}>
             {divisao.produtos.map((produto, pIdx) => renderProduto(produto, pIdx, divId))}
           </div>
         )}
@@ -211,18 +213,20 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
     return (
       <div key={prodId}>
         <div 
-          className={tw`flex items-center border-b border-gray-100 hover:bg-slate-50 transition-colors ${nodeSelected ? 'bg-blue-50' : ''}`}
-          style={{ paddingLeft: '24px', minHeight: '44px' }}
+          className={tw`flex items-center border-b transition-colors`}
+          style={{ paddingLeft: '24px', minHeight: '44px', borderColor: c.borderLight, backgroundColor: nodeSelected ? c.accentBg : undefined }}
+          onMouseEnter={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = c.rowHover }}
+          onMouseLeave={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = '' }}
         >
           {/* Expand/Collapse */}
           <button
             onClick={() => toggleExpand(prodId)}
-            className={tw`w-8 h-10 flex items-center justify-center hover:bg-gray-200 rounded transition-colors`}
+            className={tw`w-8 h-10 flex items-center justify-center rounded transition-colors`}
           >
             {hasChildren && (
               nodeExpanded 
-                ? <Icons.ChevronDown className={tw`w-3.5 h-3.5`} style={{ color: '#9ca3af' }} />
-                : <Icons.ChevronRight className={tw`w-3.5 h-3.5`} style={{ color: '#9ca3af' }} />
+                ? <Icons.ChevronDown className={tw`w-3.5 h-3.5`} style={{ color: c.iconChevronSub }} />
+                : <Icons.ChevronRight className={tw`w-3.5 h-3.5`} style={{ color: c.iconChevronSub }} />
             )}
           </button>
 
@@ -238,18 +242,18 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
           {/* Ícone + Nome */}
           <div className={tw`flex items-center flex-1 px-2`}>
-            <Icons.Package className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: '#6366f1' }} />
-            <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>
+            <Icons.Package className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: c.iconPackage }} />
+            <span className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>
               {produto.produto}
             </span>
-            <span className={tw`ml-2 text-xs px-2 py-0.5 rounded-full`} style={{ backgroundColor: '#e0e7ff', color: '#4338ca' }}>
+            <span className={tw`ml-2 text-xs px-2 py-0.5 rounded-full`} style={{ backgroundColor: c.badgeBg, color: c.badgeText }}>
               ID: {produto.id_produto}
             </span>
           </div>
 
           {/* Quantidade */}
           <div className={tw`px-4 text-right min-w-[100px]`}>
-            <span className={tw`font-semibold text-sm`} style={{ color: '#1f2937' }}>{produto.quantidade}</span>
+            <span className={tw`font-semibold text-sm`} style={{ color: c.textPrimary }}>{produto.quantidade}</span>
           </div>
         </div>
 
@@ -273,18 +277,20 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
     return (
       <div key={dataId}>
         <div 
-          className={tw`flex items-center border-b border-gray-50 hover:bg-gray-50 transition-colors ${nodeSelected ? 'bg-blue-50' : ''}`}
-          style={{ paddingLeft: '56px', minHeight: '40px', backgroundColor: nodeSelected ? undefined : '#fafafa' }}
+          className={tw`flex items-center border-b transition-colors`}
+          style={{ paddingLeft: '56px', minHeight: '40px', borderColor: c.borderSubtle, backgroundColor: nodeSelected ? c.accentBg : c.rowAlt }}
+          onMouseEnter={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = c.rowHover }}
+          onMouseLeave={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = nodeSelected ? c.accentBg : c.rowAlt }}
         >
           {/* Expand/Collapse */}
           <button
             onClick={() => toggleExpand(dataId)}
-            className={tw`w-7 h-9 flex items-center justify-center hover:bg-gray-200 rounded transition-colors`}
+            className={tw`w-7 h-9 flex items-center justify-center rounded transition-colors`}
           >
             {hasChildren && (
               nodeExpanded 
-                ? <Icons.ChevronDown className={tw`w-3 h-3`} style={{ color: '#9ca3af' }} />
-                : <Icons.ChevronRight className={tw`w-3 h-3`} style={{ color: '#9ca3af' }} />
+                ? <Icons.ChevronDown className={tw`w-3 h-3`} style={{ color: c.iconChevronSub }} />
+                : <Icons.ChevronRight className={tw`w-3 h-3`} style={{ color: c.iconChevronSub }} />
             )}
           </button>
 
@@ -300,18 +306,18 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
           {/* Ícone + Data */}
           <div className={tw`flex items-center flex-1 px-2`}>
-            <Icons.Calendar className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: '#10b981' }} />
-            <span className={tw`text-sm`} style={{ color: '#4b5563' }}>
-              Data de saída: <strong style={{ color: '#111827' }}>{formatDate(data.data_saida)}</strong>
+            <Icons.Calendar className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: c.iconCalendar }} />
+            <span className={tw`text-sm`} style={{ color: c.textMuted }}>
+              Data de saída: <strong style={{ color: c.textPrimary }}>{formatDate(data.data_saida)}</strong>
             </span>
-            <span className={tw`ml-3 text-xs`} style={{ color: '#9ca3af' }}>
+            <span className={tw`ml-3 text-xs`} style={{ color: c.textSubtle }}>
               ({data.unidades?.length || 0} unidades)
             </span>
           </div>
 
           {/* Quantidade */}
           <div className={tw`px-4 text-right min-w-[100px]`}>
-            <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>{data.quantidade}</span>
+            <span className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>{data.quantidade}</span>
           </div>
         </div>
 
@@ -335,18 +341,20 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
     return (
       <div key={unidadeId}>
         <div 
-          className={tw`flex items-center border-b border-gray-50 hover:bg-gray-50 transition-colors ${nodeSelected ? 'bg-blue-50' : ''}`}
-          style={{ paddingLeft: '72px', minHeight: '38px', backgroundColor: nodeSelected ? undefined : '#f8f9fa' }}
+          className={tw`flex items-center border-b transition-colors`}
+          style={{ paddingLeft: '72px', minHeight: '38px', borderColor: c.borderSubtle, backgroundColor: nodeSelected ? c.accentBg : c.rowDeep }}
+          onMouseEnter={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = c.rowHover }}
+          onMouseLeave={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = nodeSelected ? c.accentBg : c.rowDeep }}
         >
           {/* Expand/Collapse */}
           <button
             onClick={() => toggleExpand(unidadeId)}
-            className={tw`w-7 h-9 flex items-center justify-center hover:bg-gray-200 rounded transition-colors`}
+            className={tw`w-7 h-9 flex items-center justify-center rounded transition-colors`}
           >
             {hasChildren && (
               nodeExpanded 
-                ? <Icons.ChevronDown className={tw`w-3 h-3`} style={{ color: '#9ca3af' }} />
-                : <Icons.ChevronRight className={tw`w-3 h-3`} style={{ color: '#9ca3af' }} />
+                ? <Icons.ChevronDown className={tw`w-3 h-3`} style={{ color: c.iconChevronSub }} />
+                : <Icons.ChevronRight className={tw`w-3 h-3`} style={{ color: c.iconChevronSub }} />
             )}
           </button>
 
@@ -362,18 +370,18 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
           {/* Ícone + Nome */}
           <div className={tw`flex items-center flex-1 px-2`}>
-            <Icons.Building className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: '#8b5cf6' }} />
-            <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>
+            <Icons.Building className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: c.iconBuilding }} />
+            <span className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>
               {unidade.unidade}
             </span>
-            <span className={tw`ml-3 text-xs`} style={{ color: '#9ca3af' }}>
+            <span className={tw`ml-3 text-xs`} style={{ color: c.textSubtle }}>
               ({unidade.arquivos?.length || 0} arquivos)
             </span>
           </div>
 
           {/* Quantidade */}
           <div className={tw`px-4 text-right min-w-[100px]`}>
-            <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>{unidade.quantidade}</span>
+            <span className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>{unidade.quantidade}</span>
           </div>
         </div>
 
@@ -395,8 +403,10 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
     return (
       <div 
         key={arquivoId}
-        className={tw`flex items-center border-b border-gray-50 hover:bg-gray-50 transition-colors ${nodeSelected ? 'bg-blue-50' : ''}`}
-        style={{ paddingLeft: '104px', minHeight: '36px', backgroundColor: nodeSelected ? undefined : '#fdfdfd' }}
+        className={tw`flex items-center border-b transition-colors`}
+        style={{ paddingLeft: '104px', minHeight: '36px', borderColor: c.borderSubtle, backgroundColor: nodeSelected ? c.accentBg : c.rowDeepest }}
+        onMouseEnter={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = c.rowHover }}
+        onMouseLeave={e => { if (!nodeSelected) e.currentTarget.style.backgroundColor = nodeSelected ? c.accentBg : c.rowDeepest }}
       >
         {/* Espaço para alinhamento */}
         <div className={tw`w-7`}></div>
@@ -423,12 +433,12 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
         {/* Ícone + Nome */}
         <div className={tw`flex items-center flex-1 px-2`}>
-          <Icons.Document className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: '#ef4444' }} />
-          <span className={tw`text-sm font-mono`} style={{ color: '#6b7280', fontSize: '12px' }}>
+          <Icons.Document className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: c.iconDocument }} />
+          <span className={tw`text-sm font-mono`} style={{ color: c.textMuted, fontSize: '12px' }}>
             {arquivo.arquivo}
           </span>
           {arquivo.paginas && (
-            <span className={tw`ml-2 text-xs px-1.5 py-0.5 rounded`} style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+            <span className={tw`ml-2 text-xs px-1.5 py-0.5 rounded`} style={{ backgroundColor: c.warningBadgeBg, color: c.warningText }}>
               {arquivo.paginas} pág.
             </span>
           )}
@@ -436,7 +446,7 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
         {/* Cópias */}
         <div className={tw`px-4 text-right min-w-[100px]`}>
-          <span className={tw`text-sm`} style={{ color: '#6b7280' }}>{arquivo.copias} cópias</span>
+          <span className={tw`text-sm`} style={{ color: c.textMuted }}>{arquivo.copias} cópias</span>
         </div>
       </div>
     )
@@ -446,21 +456,21 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
   // RENDER PRINCIPAL
   // ============================================
   return (
-    <div className={tw`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden`}>
+    <div className={tw`rounded-lg shadow-sm border overflow-hidden`} style={{ backgroundColor: c.cardBg, borderColor: c.border }}>
       {/* Header da Tabela */}
       <div 
-        className={tw`flex items-center px-4 py-3 border-b border-gray-200`}
-        style={{ backgroundColor: '#f8fafc' }}
+        className={tw`flex items-center px-4 py-3 border-b`}
+        style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
       >
         <div className={tw`w-10`}></div>
         <div className={tw`w-8`}></div>
         <div className={tw`flex-1 px-3`}>
-          <span className={tw`text-xs font-semibold uppercase tracking-wider`} style={{ color: '#64748b' }}>
+          <span className={tw`text-xs font-semibold uppercase tracking-wider`} style={{ color: c.textMuted }}>
             Nome / Descrição
           </span>
         </div>
         <div className={tw`px-4 text-right min-w-[100px]`}>
-          <span className={tw`text-xs font-semibold uppercase tracking-wider`} style={{ color: '#64748b' }}>
+          <span className={tw`text-xs font-semibold uppercase tracking-wider`} style={{ color: c.textMuted }}>
             Quantidade
           </span>
         </div>
@@ -470,8 +480,8 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
       <div className={tw`overflow-auto`} style={{ maxHeight: 'calc(100vh - 280px)' }}>
         {data.length === 0 ? (
           <div className={tw`text-center py-16`}>
-            <Icons.Folder className={tw`w-12 h-12 mx-auto mb-4`} style={{ color: '#d1d5db' }} />
-            <p className={tw`text-sm`} style={{ color: '#9ca3af' }}>Nenhum dado disponível</p>
+            <Icons.Folder className={tw`w-12 h-12 mx-auto mb-4`} style={{ color: c.emptyIconLarge }} />
+            <p className={tw`text-sm`} style={{ color: c.textSubtle }}>Nenhum dado disponível</p>
           </div>
         ) : (
           <div className={tw`p-3`}>
@@ -482,15 +492,15 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
 
       {/* Footer */}
       <div 
-        className={tw`flex items-center justify-between px-4 py-3 border-t border-gray-200`}
-        style={{ backgroundColor: '#f8fafc' }}
+        className={tw`flex items-center justify-between px-4 py-3 border-t`}
+        style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
       >
         <div className={tw`flex items-center gap-4`}>
-          <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>
+          <span className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>
             {selected.size} {selected.size === 1 ? 'item selecionado' : 'itens selecionados'}
           </span>
         </div>
-        <div className={tw`text-xs`} style={{ color: '#9ca3af' }}>
+        <div className={tw`text-xs`} style={{ color: c.textSubtle }}>
           {data.length} {data.length === 1 ? 'divisão' : 'divisões'} • 
           {data.reduce((acc, d) => acc + (d.produtos?.length || 0), 0)} produtos
         </div>

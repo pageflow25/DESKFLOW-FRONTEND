@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { dashboardService } from '../services/api'
 import { tw } from '@twind/core'
 
@@ -48,6 +49,16 @@ const Icons = {
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
     </svg>
+  ),
+  Sun: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  ),
+  Moon: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+    </svg>
   )
 }
 
@@ -58,6 +69,7 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [checkingUpdates, setCheckingUpdates] = useState(false)
   const { user, logout } = useAuth()
+  const { isDark, toggleTheme, colors: c } = useTheme()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -109,52 +121,62 @@ export default function Dashboard() {
   const totalPedidos = escolas.reduce((acc, e) => acc + (e.total_pedidos || 0), 0)
 
   return (
-    <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: '#f1f5f9' }}>
+    <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: c.pageBg }}>
       {/* ============================================ */}
       {/* HEADER PRINCIPAL */}
       {/* ============================================ */}
       <header
         className={tw`flex-shrink-0 border-b`}
-        style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+        style={{ backgroundColor: c.headerBg, borderColor: c.border }}
       >
         <div className={tw`flex items-center justify-between px-6 py-3`}>
           {/* Logo / Título */}
           <div className={tw`flex items-center gap-3`}>
             <div
               className={tw`w-9 h-9 rounded-lg flex items-center justify-center`}
-              style={{ backgroundColor: '#3b82f6' }}
+              style={{ backgroundColor: c.accent }}
             >
               <Icons.School className={tw`w-5 h-5`} style={{ color: '#ffffff' }} />
             </div>
             <div>
-              <h1 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>DESKFLOW</h1>
-              <p className={tw`text-xs`} style={{ color: '#64748b' }}>Sistema de Gestão de Pedidos</p>
+              <h1 className={tw`text-lg font-bold`} style={{ color: c.textPrimary }}>DESKFLOW</h1>
+              <p className={tw`text-xs`} style={{ color: c.textMuted }}>Sistema de Gestão de Pedidos</p>
             </div>
           </div>
 
           {/* User Info + Logout */}
           <div className={tw`flex items-center gap-4`}>
             <div className={tw`text-right`}>
-              <p className={tw`text-sm font-medium`} style={{ color: '#334155' }}>{user?.name || 'Usuário'}</p>
-              <p className={tw`text-xs`} style={{ color: '#94a3b8' }}>Logado</p>
+              <p className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>{user?.name || 'Usuário'}</p>
+              <p className={tw`text-xs`} style={{ color: c.textSubtle }}>Logado</p>
             </div>
+            <button
+              onClick={toggleTheme}
+              className={tw`p-2 rounded-lg transition-colors`}
+              title={isDark ? 'Modo claro' : 'Modo escuro'}
+            >
+              {isDark
+                ? <Icons.Sun className={tw`w-5 h-5`} style={{ color: '#fbbf24' }} />
+                : <Icons.Moon className={tw`w-5 h-5`} style={{ color: c.textMuted }} />
+              }
+            </button>
             <button
               onClick={handleCheckForUpdates}
               disabled={checkingUpdates}
-              className={tw`p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50`}
+              className={tw`p-2 rounded-lg transition-colors disabled:opacity-50`}
               title="Verificar atualizações"
             >
               <Icons.Refresh
                 className={tw`w-5 h-5 ${checkingUpdates ? 'animate-spin' : ''}`}
-                style={{ color: '#3b82f6' }}
+                style={{ color: c.accent }}
               />
             </button>
             <button
               onClick={handleLogout}
-              className={tw`p-2 rounded-lg hover:bg-gray-100 transition-colors`}
+              className={tw`p-2 rounded-lg transition-colors`}
               title="Sair"
             >
-              <Icons.Logout className={tw`w-5 h-5`} style={{ color: '#64748b' }} />
+              <Icons.Logout className={tw`w-5 h-5`} style={{ color: c.textMuted }} />
             </button>
           </div>
         </div>
@@ -165,21 +187,21 @@ export default function Dashboard() {
       {/* ============================================ */}
       <div
         className={tw`flex-shrink-0 border-b px-6 py-4`}
-        style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+        style={{ backgroundColor: c.headerBg, borderColor: c.border }}
       >
         <div className={tw`flex items-center justify-between`}>
           <div className={tw`flex items-center gap-4`}>
             <div
               className={tw`p-2 rounded-lg`}
-              style={{ backgroundColor: '#f1f5f9' }}
+              style={{ backgroundColor: c.sectionBg }}
             >
-              <Icons.ChartBar className={tw`w-6 h-6`} style={{ color: '#3b82f6' }} />
+              <Icons.ChartBar className={tw`w-6 h-6`} style={{ color: c.accent }} />
             </div>
             <div>
-              <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>
+              <h2 className={tw`text-xl font-bold`} style={{ color: c.textPrimary }}>
                 Dashboard
               </h2>
-              <p className={tw`text-sm`} style={{ color: '#64748b' }}>
+              <p className={tw`text-sm`} style={{ color: c.textMuted }}>
                 Bem-vindo, {user?.name || 'Usuário'}
               </p>
             </div>
@@ -189,12 +211,12 @@ export default function Dashboard() {
           {!loading && escolas.length > 0 && (
             <div className={tw`flex items-center gap-6`}>
               <div className={tw`text-center`}>
-                <p className={tw`text-2xl font-bold`} style={{ color: '#0f172a' }}>{escolas.length}</p>
-                <p className={tw`text-xs`} style={{ color: '#64748b' }}>Escolas</p>
+                <p className={tw`text-2xl font-bold`} style={{ color: c.textPrimary }}>{escolas.length}</p>
+                <p className={tw`text-xs`} style={{ color: c.textMuted }}>Escolas</p>
               </div>
               <div className={tw`text-center`}>
-                <p className={tw`text-2xl font-bold`} style={{ color: '#3b82f6' }}>{totalPedidos}</p>
-                <p className={tw`text-xs`} style={{ color: '#64748b' }}>Total Pedidos</p>
+                <p className={tw`text-2xl font-bold`} style={{ color: c.accent }}>{totalPedidos}</p>
+                <p className={tw`text-xs`} style={{ color: c.textMuted }}>Total Pedidos</p>
               </div>
             </div>
           )}
@@ -208,19 +230,19 @@ export default function Dashboard() {
         {/* Seção Título */}
         <div className={tw`mb-6 flex items-center justify-between`}>
           <div>
-            <h3 className={tw`text-lg font-semibold mb-1`} style={{ color: '#1f2937' }}>Escolas Disponíveis</h3>
-            <p className={tw`text-sm`} style={{ color: '#64748b' }}>Clique em uma escola para ver os detalhes dos pedidos</p>
+            <h3 className={tw`text-lg font-semibold mb-1`} style={{ color: c.textPrimary }}>Escolas Disponíveis</h3>
+            <p className={tw`text-sm`} style={{ color: c.textMuted }}>Clique em uma escola para ver os detalhes dos pedidos</p>
           </div>
           <button
             onClick={handleRefresh}
             disabled={loading || refreshing}
-            className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-50`}
-            style={{ borderColor: '#e2e8f0', color: '#3b82f6', backgroundColor: '#ffffff' }}
+            className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all active:scale-[0.97] disabled:opacity-50`}
+            style={{ borderColor: c.border, color: c.accent, backgroundColor: c.cardBg }}
             title="Recarregar dados"
           >
             <Icons.Refresh
               className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-              style={{ color: '#3b82f6' }}
+              style={{ color: c.accent }}
             />
             Recarregar
           </button>
@@ -229,8 +251,8 @@ export default function Dashboard() {
         {/* Loading State */}
         {loading && (
           <div className={tw`flex flex-col items-center justify-center py-20`}>
-            <Icons.Spinner className={tw`w-10 h-10 animate-spin mb-4`} style={{ color: '#3b82f6' }} />
-            <p className={tw`text-sm font-medium`} style={{ color: '#64748b' }}>Carregando escolas...</p>
+            <Icons.Spinner className={tw`w-10 h-10 animate-spin mb-4`} style={{ color: c.accent }} />
+            <p className={tw`text-sm font-medium`} style={{ color: c.textMuted }}>Carregando escolas...</p>
           </div>
         )}
 
@@ -238,10 +260,10 @@ export default function Dashboard() {
         {error && (
           <div
             className={tw`flex items-center gap-3 px-4 py-3 rounded-lg mb-6`}
-            style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}
+            style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}` }}
           >
-            <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: '#dc2626' }} />
-            <p className={tw`text-sm`} style={{ color: '#dc2626' }}>{error}</p>
+            <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.errorText }} />
+            <p className={tw`text-sm`} style={{ color: c.errorText }}>{error}</p>
           </div>
         )}
 
@@ -254,28 +276,28 @@ export default function Dashboard() {
                 onClick={() => handleEscolaClick(escola)}
                 className={tw`rounded-lg border cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]`}
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderColor: '#e2e8f0'
+                  backgroundColor: c.cardBg,
+                  borderColor: c.border
                 }}
               >
                 {/* Card Header */}
                 <div
                   className={tw`px-5 py-4 border-b flex items-start justify-between`}
-                  style={{ borderColor: '#f1f5f9' }}
+                  style={{ borderColor: c.borderLight }}
                 >
                   <div className={tw`flex items-start gap-3 flex-1`}>
                     <div
                       className={tw`p-2.5 rounded-lg flex-shrink-0`}
-                      style={{ backgroundColor: '#eff6ff' }}
+                      style={{ backgroundColor: c.accentBg }}
                     >
-                      <Icons.Building className={tw`w-5 h-5`} style={{ color: '#3b82f6' }} />
+                      <Icons.Building className={tw`w-5 h-5`} style={{ color: c.accent }} />
                     </div>
                     <div className={tw`flex-1 min-w-0`}>
-                      <h3 className={tw`font-semibold text-base mb-1 truncate`} style={{ color: '#0f172a' }}>
+                      <h3 className={tw`font-semibold text-base mb-1 truncate`} style={{ color: c.textPrimary }}>
                         {escola.nome_escola}
                       </h3>
                       {escola.codigo_escola && (
-                        <p className={tw`text-xs`} style={{ color: '#94a3b8' }}>
+                        <p className={tw`text-xs`} style={{ color: c.textSubtle }}>
                           Código: {escola.codigo_escola}
                         </p>
                       )}
@@ -286,8 +308,8 @@ export default function Dashboard() {
                 {/* Card Body */}
                 <div className={tw`px-5 py-4`}>
                   <div className={tw`flex items-center justify-between`}>
-                    <span className={tw`text-sm font-medium`} style={{ color: '#64748b' }}>Total de pedidos</span>
-                    <span className={tw`text-2xl font-bold`} style={{ color: '#3b82f6' }}>
+                    <span className={tw`text-sm font-medium`} style={{ color: c.textMuted }}>Total de pedidos</span>
+                    <span className={tw`text-2xl font-bold`} style={{ color: c.accent }}>
                       {escola.total_pedidos}
                     </span>
                   </div>
@@ -296,11 +318,11 @@ export default function Dashboard() {
                 {/* Card Footer */}
                 <div
                   className={tw`px-5 py-3 flex items-center justify-end border-t`}
-                  style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+                  style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
                 >
                   <span
                     className={tw`text-xs font-medium flex items-center gap-1`}
-                    style={{ color: '#3b82f6' }}
+                    style={{ color: c.accent }}
                   >
                     Ver detalhes
                     <Icons.ChevronRight className={tw`w-3 h-3`} />
@@ -316,14 +338,14 @@ export default function Dashboard() {
           <div className={tw`flex flex-col items-center justify-center py-20`}>
             <div
               className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
-              style={{ backgroundColor: '#f1f5f9' }}
+              style={{ backgroundColor: c.sectionBg }}
             >
-              <Icons.Building className={tw`w-10 h-10`} style={{ color: '#cbd5e1' }} />
+              <Icons.Building className={tw`w-10 h-10`} style={{ color: c.emptyIcon }} />
             </div>
-            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: '#334155' }}>
+            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: c.textSecondary }}>
               Nenhuma escola encontrada
             </h3>
-            <p className={tw`text-sm text-center max-w-md`} style={{ color: '#64748b' }}>
+            <p className={tw`text-sm text-center max-w-md`} style={{ color: c.textMuted }}>
               Não há escolas cadastradas no sistema no momento.
             </p>
           </div>

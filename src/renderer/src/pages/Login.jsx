@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { tw } from '@twind/core'
 
 // ============================================
@@ -37,6 +38,16 @@ const Icons = {
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
     </svg>
+  ),
+  Sun: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  ),
+  Moon: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+    </svg>
   )
 }
 
@@ -46,6 +57,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { isDark, toggleTheme, colors: c } = useTheme()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -65,35 +77,47 @@ export default function Login() {
   }
 
   return (
-    <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: '#f1f5f9' }}>
+    <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: c.pageBg }}>
       {/* ============================================ */}
       {/* HEADER PRINCIPAL */}
       {/* ============================================ */}
       <header
         className={tw`flex-shrink-0 border-b`}
-        style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+        style={{ backgroundColor: c.headerBg, borderColor: c.border }}
       >
         <div className={tw`flex items-center justify-between px-6 py-3`}>
           {/* Logo / Título */}
           <div className={tw`flex items-center gap-3`}>
             <div
               className={tw`w-9 h-9 rounded-lg flex items-center justify-center`}
-              style={{ backgroundColor: '#3b82f6' }}
+              style={{ backgroundColor: c.accent }}
             >
               <Icons.School className={tw`w-5 h-5`} style={{ color: '#ffffff' }} />
             </div>
             <div>
-              <h1 className={tw`text-lg font-bold`} style={{ color: '#0f172a' }}>DESKFLOW</h1>
-              <p className={tw`text-xs`} style={{ color: '#64748b' }}>Sistema de Gestão de Pedidos</p>
+              <h1 className={tw`text-lg font-bold`} style={{ color: c.textPrimary }}>DESKFLOW</h1>
+              <p className={tw`text-xs`} style={{ color: c.textMuted }}>Sistema de Gestão de Pedidos</p>
             </div>
           </div>
 
-          {/* Badge de Login */}
-          <div
-            className={tw`px-3 py-1.5 rounded-full text-xs font-medium`}
-            style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}
-          >
-            Área de Login
+          {/* Theme Toggle + Badge */}
+          <div className={tw`flex items-center gap-3`}>
+            <button
+              onClick={toggleTheme}
+              className={tw`p-2 rounded-lg transition-colors`}
+              title={isDark ? 'Modo claro' : 'Modo escuro'}
+            >
+              {isDark
+                ? <Icons.Sun className={tw`w-5 h-5`} style={{ color: '#fbbf24' }} />
+                : <Icons.Moon className={tw`w-5 h-5`} style={{ color: c.textMuted }} />
+              }
+            </button>
+            <div
+              className={tw`px-3 py-1.5 rounded-full text-xs font-medium`}
+              style={{ backgroundColor: c.loginBadgeBg, color: c.loginBadgeText }}
+            >
+              Área de Login
+            </div>
           </div>
         </div>
       </header>
@@ -106,23 +130,23 @@ export default function Login() {
           {/* Card de Login */}
           <div
             className={tw`rounded-xl border overflow-hidden`}
-            style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+            style={{ backgroundColor: c.cardBg, borderColor: c.border }}
           >
             {/* Header do Card */}
             <div
               className={tw`px-8 py-6 border-b`}
-              style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+              style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
             >
               <div className={tw`flex items-center gap-4 mb-3`}>
                 <div
                   className={tw`w-12 h-12 rounded-xl flex items-center justify-center`}
-                  style={{ backgroundColor: '#3b82f6' }}
+                  style={{ backgroundColor: c.accent }}
                 >
                   <Icons.User className={tw`w-6 h-6`} style={{ color: '#ffffff' }} />
                 </div>
                 <div>
-                  <h2 className={tw`text-xl font-bold`} style={{ color: '#0f172a' }}>Login DESKFLOW</h2>
-                  <p className={tw`text-sm`} style={{ color: '#64748b' }}>Acesso restrito ao sistema</p>
+                  <h2 className={tw`text-xl font-bold`} style={{ color: c.textPrimary }}>Login DESKFLOW</h2>
+                  <p className={tw`text-sm`} style={{ color: c.textMuted }}>Acesso restrito ao sistema</p>
                 </div>
               </div>
             </div>
@@ -133,10 +157,10 @@ export default function Login() {
               {error && (
                 <div
                   className={tw`flex items-start gap-3 px-4 py-3 rounded-lg mb-6`}
-                  style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}
+                  style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}` }}
                 >
-                  <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0 mt-0.5`} style={{ color: '#dc2626' }} />
-                  <p className={tw`text-sm`} style={{ color: '#dc2626' }}>{error}</p>
+                  <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0 mt-0.5`} style={{ color: c.errorText }} />
+                  <p className={tw`text-sm`} style={{ color: c.errorText }}>{error}</p>
                 </div>
               )}
 
@@ -147,13 +171,13 @@ export default function Login() {
                   <label
                     className={tw`block text-sm font-semibold mb-2`}
                     htmlFor="username"
-                    style={{ color: '#334155' }}
+                    style={{ color: c.textSecondary }}
                   >
                     Usuário
                   </label>
                   <div className={tw`relative`}>
                     <div className={tw`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none`}>
-                      <Icons.User className={tw`w-5 h-5`} style={{ color: '#94a3b8' }} />
+                      <Icons.User className={tw`w-5 h-5`} style={{ color: c.textSubtle }} />
                     </div>
                     <input
                       id="username"
@@ -162,9 +186,9 @@ export default function Login() {
                       onChange={(e) => setUsername(e.target.value)}
                       className={tw`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all`}
                       style={{
-                        backgroundColor: '#ffffff',
-                        borderColor: '#e2e8f0',
-                        color: '#0f172a'
+                        backgroundColor: c.inputBg,
+                        borderColor: c.border,
+                        color: c.textPrimary
                       }}
                       placeholder="Digite seu usuário"
                       required
@@ -178,13 +202,13 @@ export default function Login() {
                   <label
                     className={tw`block text-sm font-semibold mb-2`}
                     htmlFor="password"
-                    style={{ color: '#334155' }}
+                    style={{ color: c.textSecondary }}
                   >
                     Senha
                   </label>
                   <div className={tw`relative`}>
                     <div className={tw`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none`}>
-                      <Icons.Lock className={tw`w-5 h-5`} style={{ color: '#94a3b8' }} />
+                      <Icons.Lock className={tw`w-5 h-5`} style={{ color: c.textSubtle }} />
                     </div>
                     <input
                       id="password"
@@ -193,9 +217,9 @@ export default function Login() {
                       onChange={(e) => setPassword(e.target.value)}
                       className={tw`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all`}
                       style={{
-                        backgroundColor: '#ffffff',
-                        borderColor: '#e2e8f0',
-                        color: '#0f172a'
+                        backgroundColor: c.inputBg,
+                        borderColor: c.border,
+                        color: c.textPrimary
                       }}
                       placeholder="Digite sua senha"
                       required
@@ -211,7 +235,7 @@ export default function Login() {
                   className={tw`w-full py-3 rounded-lg font-semibold text-base flex items-center justify-center gap-2 transition-all ${loading ? 'cursor-not-allowed' : 'hover:shadow-lg active:scale-[0.98]'
                     }`}
                   style={{
-                    backgroundColor: loading ? '#94a3b8' : '#3b82f6',
+                    backgroundColor: loading ? c.disabledText : c.accent,
                     color: '#ffffff'
                   }}
                 >
@@ -233,9 +257,9 @@ export default function Login() {
             {/* Footer do Card */}
             <div
               className={tw`px-8 py-4 border-t text-center`}
-              style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+              style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
             >
-              <p className={tw`text-xs`} style={{ color: '#64748b' }}>
+              <p className={tw`text-xs`} style={{ color: c.textMuted }}>
                 🔒 Acesso restrito a administradores do sistema
               </p>
             </div>
@@ -243,7 +267,7 @@ export default function Login() {
 
           {/* Informações adicionais */}
           <div className={tw`mt-6 text-center`}>
-            <p className={tw`text-sm`} style={{ color: '#64748b' }}>
+            <p className={tw`text-sm`} style={{ color: c.textMuted }}>
               DESKFLOW © {new Date().getFullYear()} - Versão 1.0.6
             </p>
           </div>

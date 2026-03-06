@@ -1,4 +1,5 @@
 import { tw } from '@twind/core'
+import { useTheme } from '../contexts/ThemeContext'
 
 /**
  * ToggleGerarOP — Componente toggle reutilizável para controle de geração de OP.
@@ -21,16 +22,18 @@ export default function ToggleGerarOP({
         }
     }
 
+    const { colors: c } = useTheme()
+
     return (
         <div className={tw`flex items-center justify-between`}>
             <div className={tw`flex-1`}>
                 <span
                     className={tw`text-sm font-medium`}
-                    style={{ color: disabled ? '#94a3b8' : '#334155' }}
+                    style={{ color: disabled ? c.disabledText : c.textSecondary }}
                 >
                     {label}
                 </span>
-                <p className={tw`text-xs mt-0.5`} style={{ color: '#94a3b8' }}>
+                <p className={tw`text-xs mt-0.5`} style={{ color: c.textSubtle }}>
                     {value
                         ? 'A OP será gerada automaticamente ao aprovar'
                         : 'A aprovação será feita sem gerar OP'}
@@ -50,8 +53,7 @@ export default function ToggleGerarOP({
           ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         `}
                 style={{
-                    backgroundColor: value ? '#10b981' : '#cbd5e1',
-                    focusRingColor: '#3b82f6'
+                    backgroundColor: value ? c.success : c.toggleOff
                 }}
             >
                 <span
