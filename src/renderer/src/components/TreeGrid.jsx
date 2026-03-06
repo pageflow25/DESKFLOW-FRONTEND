@@ -34,6 +34,11 @@ const Icons = {
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
     </svg>
+  ),
+  Building: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+    </svg>
   )
 }
 
@@ -90,6 +95,10 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
         } else if (nodeData.datas) {
           nodeData.datas.forEach((data, dIdx) => {
             updateNodeAndChildren(`${id}-data-${dIdx}`, data, select)
+          })
+        } else if (nodeData.unidades) {
+          nodeData.unidades.forEach((unidade, uIdx) => {
+            updateNodeAndChildren(`${id}-unidade-${uIdx}`, unidade, select)
           })
         } else if (nodeData.arquivos) {
           nodeData.arquivos.forEach((_, aIdx) => {
@@ -257,7 +266,7 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
   // Data de Saída (Nível 2)
   const renderData = (data, dIdx, parentId) => {
     const dataId = `${parentId}-data-${dIdx}`
-    const hasChildren = data.arquivos && data.arquivos.length > 0
+    const hasChildren = data.unidades && data.unidades.length > 0
     const nodeExpanded = isExpanded(dataId)
     const nodeSelected = isSelected(dataId)
 
@@ -296,7 +305,7 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
               Data de saída: <strong style={{ color: '#111827' }}>{formatDate(data.data_saida)}</strong>
             </span>
             <span className={tw`ml-3 text-xs`} style={{ color: '#9ca3af' }}>
-              ({data.arquivos?.length || 0} arquivos)
+              ({data.unidades?.length || 0} unidades)
             </span>
           </div>
 
@@ -306,17 +315,79 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
           </div>
         </div>
 
-        {/* Arquivos (filhos) */}
+        {/* Unidades (filhos) */}
         {nodeExpanded && hasChildren && (
           <div>
-            {data.arquivos.map((arquivo, aIdx) => renderArquivo(arquivo, aIdx, dataId))}
+            {data.unidades.map((unidade, uIdx) => renderUnidade(unidade, uIdx, dataId))}
           </div>
         )}
       </div>
     )
   }
 
-  // Arquivo PDF (Nível 3)
+  // Unidade Escolar (Nível 3)
+  const renderUnidade = (unidade, uIdx, parentId) => {
+    const unidadeId = `${parentId}-unidade-${uIdx}`
+    const hasChildren = unidade.arquivos && unidade.arquivos.length > 0
+    const nodeExpanded = isExpanded(unidadeId)
+    const nodeSelected = isSelected(unidadeId)
+
+    return (
+      <div key={unidadeId}>
+        <div 
+          className={tw`flex items-center border-b border-gray-50 hover:bg-gray-50 transition-colors ${nodeSelected ? 'bg-blue-50' : ''}`}
+          style={{ paddingLeft: '72px', minHeight: '38px', backgroundColor: nodeSelected ? undefined : '#f8f9fa' }}
+        >
+          {/* Expand/Collapse */}
+          <button
+            onClick={() => toggleExpand(unidadeId)}
+            className={tw`w-7 h-9 flex items-center justify-center hover:bg-gray-200 rounded transition-colors`}
+          >
+            {hasChildren && (
+              nodeExpanded 
+                ? <Icons.ChevronDown className={tw`w-3 h-3`} style={{ color: '#9ca3af' }} />
+                : <Icons.ChevronRight className={tw`w-3 h-3`} style={{ color: '#9ca3af' }} />
+            )}
+          </button>
+
+          {/* Checkbox */}
+          <div className={tw`px-2`}>
+            <input
+              type="checkbox"
+              checked={nodeSelected}
+              onChange={(e) => toggleSelection(unidadeId, unidade, e.target.checked)}
+              className={tw`w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer`}
+            />
+          </div>
+
+          {/* Ícone + Nome */}
+          <div className={tw`flex items-center flex-1 px-2`}>
+            <Icons.Building className={tw`w-4 h-4 mr-2 flex-shrink-0`} style={{ color: '#8b5cf6' }} />
+            <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>
+              {unidade.unidade}
+            </span>
+            <span className={tw`ml-3 text-xs`} style={{ color: '#9ca3af' }}>
+              ({unidade.arquivos?.length || 0} arquivos)
+            </span>
+          </div>
+
+          {/* Quantidade */}
+          <div className={tw`px-4 text-right min-w-[100px]`}>
+            <span className={tw`text-sm font-medium`} style={{ color: '#374151' }}>{unidade.quantidade}</span>
+          </div>
+        </div>
+
+        {/* Arquivos (filhos) */}
+        {nodeExpanded && hasChildren && (
+          <div>
+            {unidade.arquivos.map((arquivo, aIdx) => renderArquivo(arquivo, aIdx, unidadeId))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Arquivo PDF (Nível 4)
   const renderArquivo = (arquivo, aIdx, parentId) => {
     const arquivoId = `${parentId}-arquivo-${aIdx}`
     const nodeSelected = isSelected(arquivoId)
@@ -325,7 +396,7 @@ export default function TreeGrid({ data = [], onSelectionChange }) {
       <div 
         key={arquivoId}
         className={tw`flex items-center border-b border-gray-50 hover:bg-gray-50 transition-colors ${nodeSelected ? 'bg-blue-50' : ''}`}
-        style={{ paddingLeft: '88px', minHeight: '36px', backgroundColor: nodeSelected ? undefined : '#fdfdfd' }}
+        style={{ paddingLeft: '104px', minHeight: '36px', backgroundColor: nodeSelected ? undefined : '#fdfdfd' }}
       >
         {/* Espaço para alinhamento */}
         <div className={tw`w-7`}></div>
