@@ -14,6 +14,64 @@ const api = axios.create({
   },
 })
 
+export const parseApiError = (error, fallbackMessage = 'Ocorreu um erro inesperado') => {
+  if (!error) {
+    return {
+      type: 'unknown',
+      message: fallbackMessage,
+      detail: null,
+      statusCode: null
+    }
+  }
+
+  if (error.isDeskflowBusinessError) {
+    return {
+      type: error.type || 'validation',
+      message: error.userMessage || fallbackMessage,
+      detail: error.detail || null,
+      statusCode: null
+    }
+  }
+
+  const status = error.response?.status
+  const payload = error.response?.data
+  const detail = payload?.detail || payload?.message || null
+
+  if (!error.response) {
+    return {
+      type: 'communication',
+      message: 'Falha de comunicação com a API. Verifique conexão/rede e tente novamente.',
+      detail: error.message || null,
+      statusCode: null
+    }
+  }
+
+  if (status === 400 || status === 409 || status === 422) {
+    return {
+      type: 'validation',
+      message: detail || 'Não foi possível processar o envio devido a dados inválidos.',
+      detail,
+      statusCode: status
+    }
+  }
+
+  if (status >= 500) {
+    return {
+      type: 'server',
+      message: detail || 'Erro interno no servidor durante o envio para integração.',
+      detail,
+      statusCode: status
+    }
+  }
+
+  return {
+    type: 'unknown',
+    message: detail || fallbackMessage,
+    detail,
+    statusCode: status || null
+  }
+}
+
 // Interceptor para adicionar token em todas as requisições
 api.interceptors.request.use(
   (config) => {
@@ -112,13 +170,14 @@ export const pedidoService = {
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false) => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
       datas_saida: datasSaida,
       modo_agrupamento: modoAgrupamento,
-      gerar_op: gerarOp
+      gerar_op: gerarOp,
+      baixar_arquivos: baixarArquivos
     }
     
     // Adicionar parâmetros opcionais se fornecidos
@@ -139,6 +198,24 @@ export const orcamentoService = {
     }
     
     const response = await api.post('/api/orcamento/gerar', payload)
+    const result = response.data
+
+    if (Array.isArray(result?.erros) && result.erros.length > 0) {
+      const err = new Error(result.erros[0])
+      err.isDeskflowBusinessError = true
+      err.type = 'validation'
+      err.detail = result.erros.join(' | ')
+      err.userMessage = `Falha no envio de pedidos: ${result.erros[0]}`
+      throw err
+    }
+
+    return result
+  },
+
+  getLotesDisparo: async (limit = 10, offset = 0) => {
+    const response = await api.get('/api/orcamento/lotes/disparos', {
+      params: { limit, offset }
+    })
     return response.data
   }
 }

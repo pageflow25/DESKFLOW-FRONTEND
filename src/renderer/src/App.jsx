@@ -7,6 +7,7 @@ import UpdateNotice from './components/UpdateNotice'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import SchoolDetails from './pages/SchoolDetails'
+import DisparoMonitor from './pages/DisparoMonitor'
 import { install } from '@twind/core'
 import config from './utils/twind.config'
 
@@ -53,6 +54,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SchoolDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/monitor/disparos"
+            element={
+              <ProtectedRoute>
+                <DisparoMonitor />
               </ProtectedRoute>
             }
           />

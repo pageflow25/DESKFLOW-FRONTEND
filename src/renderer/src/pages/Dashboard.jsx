@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { dashboardService } from '../services/api'
+import { dashboardService, parseApiError } from '../services/api'
 import { tw } from '@twind/core'
 
 // ============================================
@@ -84,7 +84,8 @@ export default function Dashboard() {
       setEscolas(data.escolas)
     } catch (err) {
       console.error('Erro ao carregar escolas:', err)
-      setError(err.response?.data?.detail || 'Erro ao carregar escolas')
+      const parsedError = parseApiError(err, 'Erro ao carregar escolas')
+      setError(parsedError.message)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -233,19 +234,30 @@ export default function Dashboard() {
             <h3 className={tw`text-lg font-semibold mb-1`} style={{ color: c.textPrimary }}>Escolas Disponíveis</h3>
             <p className={tw`text-sm`} style={{ color: c.textMuted }}>Clique em uma escola para ver os detalhes dos pedidos</p>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-            className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all active:scale-[0.97] disabled:opacity-50`}
-            style={{ borderColor: c.border, color: c.accent, backgroundColor: c.cardBg }}
-            title="Recarregar dados"
-          >
-            <Icons.Refresh
-              className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-              style={{ color: c.accent }}
-            />
-            Recarregar
-          </button>
+          <div className={tw`flex items-center gap-2`}>
+            <button
+              onClick={() => navigate('/monitor/disparos')}
+              className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all active:scale-[0.97]`}
+              style={{ borderColor: c.border, color: c.textPrimary, backgroundColor: c.cardBg }}
+              title="Acompanhar disparos"
+            >
+              <Icons.ChartBar className={tw`w-4 h-4`} style={{ color: c.accent }} />
+              Acompanhar Disparos
+            </button>
+            <button
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+              className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all active:scale-[0.97] disabled:opacity-50`}
+              style={{ borderColor: c.border, color: c.accent, backgroundColor: c.cardBg }}
+              title="Recarregar dados"
+            >
+              <Icons.Refresh
+                className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                style={{ color: c.accent }}
+              />
+              Recarregar
+            </button>
+          </div>
         </div>
 
         {/* Loading State */}

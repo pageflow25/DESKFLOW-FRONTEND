@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { pedidoService, orcamentoService } from '../services/api'
+import { pedidoService, orcamentoService, parseApiError } from '../services/api'
 import { tw } from '@twind/core'
 import TreeGrid from '../components/TreeGrid'
 import ToggleGerarOP from '../components/ToggleGerarOP'
@@ -69,6 +69,13 @@ const Icons = {
   )
 }
 
+const formatDatePtBr = (isoDate) => {
+  if (!isoDate || typeof isoDate !== 'string') return isoDate
+  const [year, month, day] = isoDate.slice(0, 10).split('-')
+  if (!year || !month || !day) return isoDate
+  return `${day}/${month}/${year}`
+}
+
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
@@ -90,6 +97,7 @@ export default function SchoolDetails() {
   const [dataEntrega, setDataEntrega] = useState('')
   const [modoAgrupamento, setModoAgrupamento] = useState('unidade')
   const [gerarOp, setGerarOp] = useState(true)
+  const [baixarArquivos, setBaixarArquivos] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [idsFormularios, setIdsFormularios] = useState('')
   const [statusIds, setStatusIds] = useState('1')
@@ -130,55 +138,61 @@ export default function SchoolDetails() {
     setSelectedItems(selection)
   }
 
+  const extrairDadosSelecao = () => {
+    const idsProdutos = new Set()
+    const datasSaida = new Set()
+    const divisoesLogistica = new Set()
+    const diasUteis = new Set()
+
+    selectedItems.forEach(nodeId => {
+      const parts = nodeId.split('-')
+
+      if (parts.includes('produto')) {
+        const divIndex = parseInt(parts[1])
+        const produtoIndex = parseInt(parts[3])
+
+        if (divisoes[divIndex] && divisoes[divIndex].produtos[produtoIndex]) {
+          const produto = divisoes[divIndex].produtos[produtoIndex]
+          const divisao = divisoes[divIndex]
+
+          if (divisao.divisao_logistica) {
+            divisoesLogistica.add(divisao.divisao_logistica)
+          }
+
+          if (divisao.dias_uteis && divisao.dias_uteis !== 'Sem dias uteis') {
+            const diasUteisNum = parseInt(divisao.dias_uteis)
+            if (!isNaN(diasUteisNum)) {
+              diasUteis.add(diasUteisNum)
+            }
+          }
+
+          idsProdutos.add(produto.id_produto)
+
+          if (parts.includes('data')) {
+            const dataIndex = parseInt(parts[5])
+            if (produto.datas[dataIndex] && produto.datas[dataIndex].data_saida !== 'Sem data saida') {
+              datasSaida.add(produto.datas[dataIndex].data_saida)
+            }
+          }
+        }
+      }
+    })
+
+    return {
+      idsProdutos: Array.from(idsProdutos),
+      datasSaida: Array.from(datasSaida).sort(),
+      divisoesLogistica: Array.from(divisoesLogistica),
+      diasUteis: Array.from(diasUteis)
+    }
+  }
+
   const handleGenerateBudget = async () => {
     if (selectedItems.size === 0) return
 
     try {
       setGeneratingBudget(true)
       setSuccessMessage('')
-
-      const idsProdutos = new Set()
-      const datasSaida = new Set()
-      const divisoesLogistica = new Set()
-      const diasUteis = new Set()
-
-      selectedItems.forEach(nodeId => {
-        const parts = nodeId.split('-')
-
-        if (parts.includes('produto')) {
-          const divIndex = parseInt(parts[1])
-          const produtoIndex = parseInt(parts[3])
-
-          if (divisoes[divIndex] && divisoes[divIndex].produtos[produtoIndex]) {
-            const produto = divisoes[divIndex].produtos[produtoIndex]
-            const divisao = divisoes[divIndex]
-
-            // Capturar divisão logística e dias úteis
-            if (divisao.divisao_logistica) {
-              divisoesLogistica.add(divisao.divisao_logistica)
-            }
-            if (divisao.dias_uteis && divisao.dias_uteis !== 'Sem dias uteis') {
-              const diasUteisNum = parseInt(divisao.dias_uteis)
-              if (!isNaN(diasUteisNum)) {
-                diasUteis.add(diasUteisNum)
-              }
-            }
-
-            idsProdutos.add(produto.id_produto)
-
-            // CORRIGIDO: datas são extraídas APENAS de nós 'data' (nunca do nó 'produto').
-            // Quando o usuário seleciona um produto ou divisão, o TreeGrid já propaga
-            // a seleção para todos os nós filhos de data — então eles estarão em
-            // selectedItems e suas datas serão capturadas na iteração de nós 'data'.
-            if (parts.includes('data')) {
-              const dataIndex = parseInt(parts[5])
-              if (produto.datas[dataIndex] && produto.datas[dataIndex].data_saida !== 'Sem data saida') {
-                datasSaida.add(produto.datas[dataIndex].data_saida)
-              }
-            }
-          }
-        }
-      })
+      const dadosSelecao = extrairDadosSelecao()
 
       // Formatar data de entrega para ISO se fornecida
       const dataEntregaFormatada = dataEntrega
@@ -197,15 +211,16 @@ export default function SchoolDetails() {
 
       const result = await orcamentoService.gerarOrcamento(
         parseInt(escolaId),
-        Array.from(idsProdutos),
-        Array.from(datasSaida),
-        divisoesLogistica.size > 0 ? Array.from(divisoesLogistica) : null,
-        diasUteis.size > 0 ? Array.from(diasUteis) : null,
+        dadosSelecao.idsProdutos,
+        dadosSelecao.datasSaida,
+        dadosSelecao.divisoesLogistica.length > 0 ? dadosSelecao.divisoesLogistica : null,
+        dadosSelecao.diasUteis.length > 0 ? dadosSelecao.diasUteis : null,
         dataEntregaFormatada,
         modoAgrupamento,
         gerarOp,
         parsedIdsFormularios,
-        parsedStatusIds
+        parsedStatusIds,
+        baixarArquivos
       )
 
       setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}${result.grupo_lote_id ? ` — Lote #${result.grupo_lote_id}` : ''}`)
@@ -216,13 +231,29 @@ export default function SchoolDetails() {
 
     } catch (err) {
       console.error('Erro ao gerar orçamento:', err)
-      setError(err.response?.data?.detail || 'Erro ao gerar orçamento')
+      const parsedError = parseApiError(err, 'Erro ao gerar orçamento')
+
+      const prefixMap = {
+        validation: 'Erro de validação no envio',
+        communication: 'Falha de comunicação com a integração',
+        server: 'Erro interno no servidor',
+        unknown: 'Erro no processamento do envio'
+      }
+
+      const prefix = prefixMap[parsedError.type] || prefixMap.unknown
+      const statusText = parsedError.statusCode ? ` (HTTP ${parsedError.statusCode})` : ''
+      const detail = parsedError.detail && parsedError.detail !== parsedError.message
+        ? ` | Detalhe: ${parsedError.detail}`
+        : ''
+
+      setError(`${prefix}${statusText}: ${parsedError.message}${detail}`)
     } finally {
       setGeneratingBudget(false)
       setShowDateModal(false)
       setDataEntrega('')
       setModoAgrupamento('unidade')
       setGerarOp(true)
+      setBaixarArquivos(true)
     }
   }
 
@@ -235,6 +266,9 @@ export default function SchoolDetails() {
   const totalDivisoes = divisoes.length
   const totalProdutos = divisoes.reduce((acc, d) => acc + (d.produtos?.length || 0), 0)
   const totalQuantidade = divisoes.reduce((acc, d) => acc + (d.quantidade_total || 0), 0)
+  const dadosSelecaoAtual = extrairDadosSelecao()
+  const datasSelecionadasFormatadas = dadosSelecaoAtual.datasSaida.map(formatDatePtBr)
+  const temMultiplasDatasSelecionadas = dadosSelecaoAtual.datasSaida.length > 1
 
   return (
     <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: c.pageBg }}>
@@ -485,6 +519,22 @@ export default function SchoolDetails() {
         </div>
       )}
 
+      {!loading && divisoes.length > 0 && dadosSelecaoAtual.datasSaida.length > 0 && (
+        <div
+          className={tw`flex-shrink-0 px-6 py-3 border-b`}
+          style={{ backgroundColor: temMultiplasDatasSelecionadas ? c.warningBg : c.cardBg, borderColor: c.border }}
+        >
+          <p className={tw`text-sm font-medium`} style={{ color: temMultiplasDatasSelecionadas ? c.warningText : c.textPrimary }}>
+            {temMultiplasDatasSelecionadas
+              ? `Atenção: você selecionou ${dadosSelecaoAtual.datasSaida.length} datas de saída.`
+              : 'Você selecionou 1 data de saída.'}
+          </p>
+          <p className={tw`text-xs mt-1`} style={{ color: c.textSecondary }}>
+            Datas: {datasSelecionadasFormatadas.join(', ')}
+          </p>
+        </div>
+      )}
+
       {/* ============================================ */}
       {/* MENSAGENS DE FEEDBACK */}
       {/* ============================================ */}
@@ -657,7 +707,7 @@ export default function SchoolDetails() {
 
               {/* Toggle Gerar OP */}
               <div
-                className={tw`mb-6 px-4 py-3 rounded-lg`}
+                className={tw`mb-4 px-4 py-3 rounded-lg`}
                 style={{ backgroundColor: c.sectionBg, border: `1px solid ${c.border}` }}
               >
                 <ToggleGerarOP
@@ -665,6 +715,34 @@ export default function SchoolDetails() {
                   onChange={setGerarOp}
                   disabled={generatingBudget}
                 />
+              </div>
+
+              {/* Toggle Baixar Arquivos */}
+              <div
+                className={tw`mb-6 px-4 py-3 rounded-lg`}
+                style={{ backgroundColor: c.sectionBg, border: `1px solid ${c.border}` }}
+              >
+                <div className={tw`flex items-center justify-between gap-3`}>
+                  <div>
+                    <p className={tw`text-sm font-semibold`} style={{ color: c.textPrimary }}>Baixar arquivos após aprovação</p>
+                    <p className={tw`text-xs mt-0.5`} style={{ color: c.textMuted }}>
+                      {baixarArquivos ? 'Fase 03 será executada — download dos PDFs gerados' : 'Fase 03 ignorada — apenas gera e aprova o orçamento'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={generatingBudget}
+                    onClick={() => setBaixarArquivos(v => !v)}
+                    className={tw`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50`}
+                    style={{ backgroundColor: baixarArquivos ? c.accent : c.border }}
+                    aria-pressed={baixarArquivos}
+                  >
+                    <span
+                      className={tw`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                      style={{ transform: baixarArquivos ? 'translateX(20px)' : 'translateX(0px)' }}
+                    />
+                  </button>
+                </div>
               </div>
 
               {/* Info da seleção */}
@@ -676,12 +754,25 @@ export default function SchoolDetails() {
                   <span className={tw`font-semibold`} style={{ color: c.textPrimary }}>{selectedItems.size}</span>
                   {' '}{selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'} para o orçamento
                 </p>
+
+                {dadosSelecaoAtual.datasSaida.length > 0 && (
+                  <>
+                    <p className={tw`text-sm mt-2`} style={{ color: temMultiplasDatasSelecionadas ? c.warningText : c.textPrimary }}>
+                      {temMultiplasDatasSelecionadas
+                        ? `⚠ ${dadosSelecaoAtual.datasSaida.length} datas selecionadas`
+                        : '✓ 1 data selecionada'}
+                    </p>
+                    <p className={tw`text-xs mt-1`} style={{ color: c.textSecondary }}>
+                      Datas selecionadas: {datasSelecionadasFormatadas.join(', ')}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Botões */}
               <div className={tw`flex gap-3`}>
                 <button
-                  onClick={() => { setShowDateModal(false); setDataEntrega(''); setModoAgrupamento('unidade'); setGerarOp(true) }}
+                  onClick={() => { setShowDateModal(false); setDataEntrega(''); setModoAgrupamento('unidade'); setGerarOp(true); setBaixarArquivos(true) }}
                   disabled={generatingBudget}
                   className={tw`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm border transition-colors`}
                   style={{ borderColor: c.border, color: c.textSecondary }}
