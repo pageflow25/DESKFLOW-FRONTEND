@@ -92,7 +92,9 @@ export default function DisparoMonitor() {
   const [lotes, setLotes] = useState([])
   const [totalGeral, setTotalGeral] = useState(0)
   const [page, setPage] = useState(1)
-  const [expanded, setExpanded] = useState(new Set())
+  const [expandedLotes, setExpandedLotes] = useState(new Set())
+  const [expandedOrcs, setExpandedOrcs] = useState(new Set())
+  const [expandedDists, setExpandedDists] = useState(new Set())
   const { user, logout } = useAuth()
   const { isDark, toggleTheme, colors: c } = useTheme()
   const navigate = useNavigate()
@@ -107,7 +109,9 @@ export default function DisparoMonitor() {
       const data = await orcamentoService.getLotesDisparo(PAGE_SIZE, offset)
       setLotes(data?.lotes || [])
       setTotalGeral(data?.total_geral ?? data?.total_lotes ?? 0)
-      setExpanded(new Set())
+      setExpandedLotes(new Set())
+      setExpandedOrcs(new Set())
+      setExpandedDists(new Set())
     } catch (err) {
       const parsed = parseApiError(err, 'Erro ao carregar acompanhamento de disparos')
       setError(parsed.message)
@@ -135,14 +139,11 @@ export default function DisparoMonitor() {
     }
   }
 
-  const toggleExpanded = (loteId) => {
-    setExpanded((prev) => {
+  const toggleSet = (setter, key) => {
+    setter((prev) => {
       const next = new Set(prev)
-      if (next.has(loteId)) {
-        next.delete(loteId)
-      } else {
-        next.add(loteId)
-      }
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
       return next
     })
   }
@@ -253,127 +254,205 @@ export default function DisparoMonitor() {
         {!loading && lotes.length > 0 && (
           <div className={tw`space-y-3`}>
             {lotes.map((lote) => {
-              const isExpanded = expanded.has(lote.grupo_lote_id)
+              const loteKey = lote.grupo_lote_id
+              const isLoteOpen = expandedLotes.has(loteKey)
               return (
-                <div key={lote.grupo_lote_id} className={tw`border rounded-lg`} style={{ borderColor: c.border, backgroundColor: c.cardBg }}>
+                <div key={loteKey} className={tw`border rounded-lg overflow-hidden`} style={{ borderColor: c.border, backgroundColor: c.cardBg }}>
+                  {/* ── Cabeçalho do Lote ── */}
                   <button
                     type="button"
-                    onClick={() => toggleExpanded(lote.grupo_lote_id)}
+                    onClick={() => toggleSet(setExpandedLotes, loteKey)}
                     className={tw`w-full px-4 py-3 flex items-center justify-between text-left`}
                   >
-                    <div className={tw`flex items-center gap-3`}>
-                      {isExpanded
-                        ? <Icons.ChevronDown className={tw`w-4 h-4`} style={{ color: c.textSecondary }} />
-                        : <Icons.ChevronRight className={tw`w-4 h-4`} style={{ color: c.textSecondary }} />}
-                      <div>
+                    <div className={tw`flex items-center gap-3 min-w-0`}>
+                      {isLoteOpen
+                        ? <Icons.ChevronDown className={tw`w-4 h-4 flex-shrink-0`} style={{ color: c.accent }} />
+                        : <Icons.ChevronRight className={tw`w-4 h-4 flex-shrink-0`} style={{ color: c.textSecondary }} />}
+                      <div className={tw`min-w-0`}>
                         <div className={tw`font-semibold text-sm`} style={{ color: c.textPrimary }}>
                           Lote #{lote.grupo_lote_id}
                         </div>
-                        <div className={tw`text-xs`} style={{ color: c.textSecondary }}>
+                        {lote.escolas.length > 0 && (
+                          <div className={tw`text-xs mt-0.5 truncate`} style={{ color: c.accent }}>
+                            {lote.escolas.join(', ')}
+                          </div>
+                        )}
+                        {lote.destinos.length > 0 && (
+                          <div className={tw`text-xs mt-0.5 truncate`} style={{ color: c.textSecondary }}>
+                            Destino: {lote.destinos.join(', ')}
+                          </div>
+                        )}
+                        <div className={tw`text-xs mt-0.5`} style={{ color: c.textMuted }}>
                           Envio: {formatDateTime(lote.data_envio)}
                         </div>
                       </div>
                     </div>
 
-                    <div className={tw`flex items-center gap-4 text-xs`} style={{ color: c.textSecondary }}>
+                    <div className={tw`flex items-center gap-4 text-xs flex-shrink-0`} style={{ color: c.textSecondary }}>
                       <span>Total: <strong style={{ color: c.textPrimary }}>{lote.total_pedidos}</strong></span>
                       <span>Sucesso: <strong style={{ color: c.successText }}>{lote.total_sucesso}</strong></span>
                       <span>Erro: <strong style={{ color: c.errorText }}>{lote.total_erro}</strong></span>
                     </div>
                   </button>
 
-                  {isExpanded && (
+                  {/* ── Orçamentos dentro do Lote ── */}
+                  {isLoteOpen && (
                     <div className={tw`border-t`} style={{ borderColor: c.border }}>
-                      {lote.itens.map((item) => {
-                        const statusVisual = getStatusVisual(item)
-                        const toneColor = statusVisual.tone === 'success'
-                          ? c.successText
-                          : statusVisual.tone === 'error'
-                            ? c.errorText
-                            : c.textSecondary
+                      {(lote.orcamentos || []).length === 0 && (
+                        <div className={tw`px-6 py-3 text-xs`} style={{ color: c.textMuted }}>Nenhum orçamento neste lote.</div>
+                      )}
+                      {(lote.orcamentos || []).map((orc, orcIdx) => {
+                        const orcKey = `${loteKey}-orc-${orc.id_orcamento ?? orcIdx}`
+                        const isOrcOpen = expandedOrcs.has(orcKey)
+                        const totalDists = orc.distribuicoes?.length || 0
+                        const totalOps = orc.distribuicoes?.reduce((s, d) => s + (d.ops?.length || 0), 0) || 0
 
                         return (
-                          <div
-                            key={`${lote.grupo_lote_id}-${item.distribuicao_material_id}`}
-                            className={tw`px-4 py-3 border-b last:border-b-0`}
-                            style={{ borderColor: c.borderLight }}
-                          >
-                            <div className={tw`flex items-start justify-between gap-4`}>
-                              <div className={tw`flex-1 min-w-0`}>
-                                {item.escola_nome && (
-                                  <div className={tw`text-sm font-semibold truncate`} style={{ color: c.textPrimary }}>
-                                    {item.escola_nome}
-                                  </div>
-                                )}
-                                {item.unidade_nome && (
-                                  <div className={tw`text-xs mt-0.5 truncate`} style={{ color: c.textSecondary }}>
-                                    Unidade: {item.unidade_nome}
-                                  </div>
-                                )}
-                                {item.material_descricao && (
-                                  <div className={tw`text-xs mt-0.5 truncate`} style={{ color: c.textMuted }}>
-                                    Material: {item.material_descricao}
-                                  </div>
-                                )}
-                                {!item.escola_nome && (
-                                  <div className={tw`text-sm`} style={{ color: c.textPrimary }}>
-                                    Distribuição #{item.distribuicao_material_id}
-                                  </div>
-                                )}
-                                {item.escola_nome && (
-                                  <div className={tw`text-xs mt-0.5`} style={{ color: c.textMuted }}>
-                                    Distribuição #{item.distribuicao_material_id}
-                                  </div>
-                                )}
+                          <div key={orcKey} className={tw`border-b last:border-b-0`} style={{ borderColor: c.borderLight }}>
+                            {/* Cabeçalho do Orçamento */}
+                            <button
+                              type="button"
+                              onClick={() => toggleSet(setExpandedOrcs, orcKey)}
+                              className={tw`w-full px-6 py-2.5 flex items-center justify-between text-left`}
+                              style={{ backgroundColor: isOrcOpen ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : 'transparent' }}
+                            >
+                              <div className={tw`flex items-center gap-2`}>
+                                {isOrcOpen
+                                  ? <Icons.ChevronDown className={tw`w-3.5 h-3.5`} style={{ color: c.accent }} />
+                                  : <Icons.ChevronRight className={tw`w-3.5 h-3.5`} style={{ color: c.textMuted }} />}
+                                <span className={tw`text-sm font-medium`} style={{ color: c.textPrimary }}>
+                                  {orc.id_orcamento ? `Orçamento #${orc.id_orcamento}` : 'Sem Orçamento'}
+                                </span>
                               </div>
-
-                              <div className={tw`flex-shrink-0 text-right`}>
-                                <div className={tw`text-xs font-semibold`} style={{ color: toneColor }}>
-                                  {statusVisual.label}
-                                </div>
-                                <div className={tw`text-xs mt-0.5`} style={{ color: c.textMuted }}>
-                                  {formatDateTime(item.data_evento)}
-                                </div>
+                              <div className={tw`flex items-center gap-3 text-xs`} style={{ color: c.textSecondary }}>
+                                <span>{totalDists} {totalDists === 1 ? 'distribuição' : 'distribuições'}</span>
+                                {totalOps > 0 && <span>{totalOps} {totalOps === 1 ? 'OP' : 'OPs'}</span>}
                               </div>
-                            </div>
+                            </button>
 
-                            {item.mensagem && (
-                              <div className={tw`mt-1.5 text-xs`} style={{ color: statusVisual.tone === 'error' ? c.errorText : c.textSecondary }}>
-                                {item.mensagem}
-                              </div>
-                            )}
+                            {/* Distribuições dentro do Orçamento */}
+                            {isOrcOpen && (
+                              <div className={tw`border-t`} style={{ borderColor: c.borderLight }}>
+                                {(orc.distribuicoes || []).map((dist) => {
+                                  const distKey = `${orcKey}-dist-${dist.distribuicao_material_id}`
+                                  const isDistOpen = expandedDists.has(distKey)
+                                  const statusVisual = getStatusVisual(dist)
+                                  const toneColor = statusVisual.tone === 'success'
+                                    ? c.successText
+                                    : statusVisual.tone === 'error'
+                                      ? c.errorText
+                                      : c.textSecondary
 
-                            {Array.isArray(item.eventos) && item.eventos.length > 0 && (
-                              <div className={tw`mt-3 pt-3 border-t`} style={{ borderColor: c.borderLight }}>
-                                <div className={tw`flex items-center gap-1.5 mb-2`}>
-                                  <Icons.Clock className={tw`w-3.5 h-3.5`} style={{ color: c.textMuted }} />
-                                  <span className={tw`text-xs font-semibold`} style={{ color: c.textSecondary }}>
-                                    Timeline do pedido
-                                  </span>
-                                </div>
-
-                                <div className={tw`space-y-2`}>
-                                  {item.eventos.map((evento, index) => {
-                                    const eventoSucesso = !!evento.sucesso
-                                    const pontoCor = eventoSucesso ? c.successText : c.errorText
-                                    const textoCor = eventoSucesso ? c.textSecondary : c.errorText
-
-                                    return (
-                                      <div key={`${lote.grupo_lote_id}-${item.distribuicao_material_id}-evt-${index}`} className={tw`flex items-start gap-2`}>
-                                        <div className={tw`mt-1.5 w-2 h-2 rounded-full flex-shrink-0`} style={{ backgroundColor: pontoCor }} />
-                                        <div className={tw`min-w-0 flex-1`}>
-                                          <p className={tw`text-xs font-medium`} style={{ color: c.textPrimary }}>
-                                            {evento.status || 'status_desconhecido'}
-                                          </p>
-                                          <p className={tw`text-xs`} style={{ color: textoCor }}>
-                                            {formatDateTime(evento.data_evento)}
-                                            {evento.mensagem ? ` • ${evento.mensagem}` : ''}
-                                          </p>
+                                  return (
+                                    <div key={distKey} className={tw`border-b last:border-b-0`} style={{ borderColor: c.borderLight }}>
+                                      {/* Cabeçalho da Distribuição */}
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleSet(setExpandedDists, distKey)}
+                                        className={tw`w-full px-8 py-2.5 flex items-start justify-between text-left`}
+                                      >
+                                        <div className={tw`flex items-start gap-2 min-w-0 flex-1`}>
+                                          {isDistOpen
+                                            ? <Icons.ChevronDown className={tw`w-3 h-3 mt-0.5 flex-shrink-0`} style={{ color: c.accent }} />
+                                            : <Icons.ChevronRight className={tw`w-3 h-3 mt-0.5 flex-shrink-0`} style={{ color: c.textMuted }} />}
+                                          <div className={tw`min-w-0 flex-1`}>
+                                            <div className={tw`text-xs font-semibold truncate`} style={{ color: c.textPrimary }}>
+                                              {dist.escola_nome || `Distribuição #${dist.distribuicao_material_id}`}
+                                              {dist.unidade_nome && <span style={{ color: c.textSecondary, fontWeight: 'normal' }}> → {dist.unidade_nome}</span>}
+                                            </div>
+                                            {dist.material_descricao && (
+                                              <div className={tw`text-xs mt-0.5 truncate`} style={{ color: c.textMuted }}>
+                                                Material: {dist.material_descricao}
+                                              </div>
+                                            )}
+                                            {dist.arquivo_nome && (
+                                              <div className={tw`text-xs mt-0.5 truncate`} style={{ color: c.textMuted }}>
+                                                Arquivo: {dist.arquivo_nome}
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
+                                        <div className={tw`flex-shrink-0 text-right ml-3`}>
+                                          <div className={tw`text-xs font-semibold`} style={{ color: toneColor }}>{statusVisual.label}</div>
+                                          {dist.quantidade != null && (
+                                            <div className={tw`text-xs`} style={{ color: c.textMuted }}>Qtd: {dist.quantidade}</div>
+                                          )}
+                                        </div>
+                                      </button>
+
+                                      {/* Detalhes expandidos da Distribuição */}
+                                      {isDistOpen && (
+                                        <div className={tw`px-10 pb-3`}>
+                                          {/* OPs */}
+                                          {dist.ops && dist.ops.length > 0 && (
+                                            <div className={tw`mb-3`}>
+                                              <div className={tw`text-xs font-semibold mb-1.5`} style={{ color: c.textSecondary }}>
+                                                Ordens de Produção
+                                              </div>
+                                              <div className={tw`space-y-1.5`}>
+                                                {dist.ops.map((op, opIdx) => (
+                                                  <div
+                                                    key={`${distKey}-op-${opIdx}`}
+                                                    className={tw`flex items-center gap-3 px-3 py-2 rounded-lg border text-xs`}
+                                                    style={{ borderColor: c.borderLight, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
+                                                  >
+                                                    <span className={tw`font-medium`} style={{ color: c.accent }}>OP #{op.id_ops}</span>
+                                                    {op.pedido && (
+                                                      <span style={{ color: c.textSecondary }}>
+                                                        Pedido: {op.pedido.id || '—'}
+                                                        {op.pedido.serie ? ` | Série: ${op.pedido.serie}` : ''}
+                                                        {op.pedido.empresa ? ` | Empresa: ${op.pedido.empresa}` : ''}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {/* Arquivo e Material */}
+                                          <div className={tw`flex flex-wrap gap-x-6 gap-y-1 text-xs mb-3`} style={{ color: c.textSecondary }}>
+                                            {dist.arquivo_nome && <span>📄 {dist.arquivo_nome}</span>}
+                                            {dist.material_descricao && <span>📦 {dist.material_descricao}</span>}
+                                            {dist.quantidade != null && <span>Quantidade: {dist.quantidade}</span>}
+                                            <span>Distribuição #{dist.distribuicao_material_id}</span>
+                                          </div>
+
+                                          {/* Timeline */}
+                                          {Array.isArray(dist.eventos) && dist.eventos.length > 0 && (
+                                            <div className={tw`pt-2 border-t`} style={{ borderColor: c.borderLight }}>
+                                              <div className={tw`flex items-center gap-1.5 mb-2`}>
+                                                <Icons.Clock className={tw`w-3.5 h-3.5`} style={{ color: c.textMuted }} />
+                                                <span className={tw`text-xs font-semibold`} style={{ color: c.textSecondary }}>Timeline</span>
+                                              </div>
+                                              <div className={tw`space-y-1.5`}>
+                                                {dist.eventos.map((evento, evIdx) => {
+                                                  const evSucesso = !!evento.sucesso
+                                                  const pontoCor = evSucesso ? c.successText : c.errorText
+                                                  const textoCor = evSucesso ? c.textSecondary : c.errorText
+                                                  return (
+                                                    <div key={`${distKey}-ev-${evIdx}`} className={tw`flex items-start gap-2`}>
+                                                      <div className={tw`mt-1.5 w-2 h-2 rounded-full flex-shrink-0`} style={{ backgroundColor: pontoCor }} />
+                                                      <div className={tw`min-w-0 flex-1`}>
+                                                        <p className={tw`text-xs font-medium`} style={{ color: c.textPrimary }}>
+                                                          {evento.status || 'status_desconhecido'}
+                                                        </p>
+                                                        <p className={tw`text-xs`} style={{ color: textoCor }}>
+                                                          {formatDateTime(evento.data_evento)}
+                                                          {evento.mensagem ? ` • ${evento.mensagem}` : ''}
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                  )
+                                                })}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                })}
                               </div>
                             )}
                           </div>

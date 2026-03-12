@@ -64,6 +64,7 @@ const Icons = {
 
 export default function Dashboard() {
   const [escolas, setEscolas] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -120,6 +121,20 @@ export default function Dashboard() {
 
   // Calcular estatísticas
   const totalPedidos = escolas.reduce((acc, e) => acc + (e.total_pedidos || 0), 0)
+  const escolasOrdenadas = [...escolas].sort((a, b) => {
+    if (a.possui_pedidos_alerta === b.possui_pedidos_alerta) {
+      return (a.nome_escola || '').localeCompare(b.nome_escola || '', 'pt-BR')
+    }
+    return a.possui_pedidos_alerta ? -1 : 1
+  })
+  const escolasFiltradas = escolasOrdenadas.filter((escola) => {
+    if (!searchTerm.trim()) return true
+    const termo = searchTerm.toLowerCase()
+    return (
+      (escola.nome_escola || '').toLowerCase().includes(termo)
+      || (escola.codigo_escola || '').toLowerCase().includes(termo)
+    )
+  })
 
   return (
     <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: c.pageBg }}>
@@ -235,6 +250,21 @@ export default function Dashboard() {
             <p className={tw`text-sm`} style={{ color: c.textMuted }}>Clique em uma escola para ver os detalhes dos pedidos</p>
           </div>
           <div className={tw`flex items-center gap-2`}>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Pesquisar escola por nome ou código"
+              className={tw`px-3 py-2 rounded-lg border text-sm outline-none transition-colors`}
+              style={{
+                borderColor: c.border,
+                color: c.textPrimary,
+                width: '300px',
+                backgroundColor: c.inputBg
+              }}
+              onFocus={e => e.target.style.borderColor = c.accent}
+              onBlur={e => e.target.style.borderColor = c.border}
+            />
             <button
               onClick={() => navigate('/monitor/disparos')}
               className={tw`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm border transition-all active:scale-[0.97]`}
@@ -280,16 +310,16 @@ export default function Dashboard() {
         )}
 
         {/* Grid de Escolas */}
-        {!loading && !error && escolas.length > 0 && (
+        {!loading && !error && escolasFiltradas.length > 0 && (
           <div className={tw`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4`}>
-            {escolas.map((escola) => (
+            {escolasFiltradas.map((escola) => (
               <div
                 key={escola.escola_id}
                 onClick={() => handleEscolaClick(escola)}
                 className={tw`rounded-lg border cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]`}
                 style={{
                   backgroundColor: c.cardBg,
-                  borderColor: c.border
+                  borderColor: escola.possui_pedidos_alerta ? c.warningText : c.border
                 }}
               >
                 {/* Card Header */}
@@ -311,6 +341,11 @@ export default function Dashboard() {
                       {escola.codigo_escola && (
                         <p className={tw`text-xs`} style={{ color: c.textSubtle }}>
                           Código: {escola.codigo_escola}
+                        </p>
+                      )}
+                      {escola.possui_pedidos_alerta && (
+                        <p className={tw`text-xs font-semibold mt-1`} style={{ color: c.warningText }}>
+                          ⚠ Escola com pedidos pendentes
                         </p>
                       )}
                     </div>
@@ -359,6 +394,23 @@ export default function Dashboard() {
             </h3>
             <p className={tw`text-sm text-center max-w-md`} style={{ color: c.textMuted }}>
               Não há escolas cadastradas no sistema no momento.
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && escolas.length > 0 && escolasFiltradas.length === 0 && (
+          <div className={tw`flex flex-col items-center justify-center py-20`}>
+            <div
+              className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
+              style={{ backgroundColor: c.sectionBg }}
+            >
+              <Icons.Building className={tw`w-10 h-10`} style={{ color: c.emptyIcon }} />
+            </div>
+            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: c.textSecondary }}>
+              Nenhuma escola encontrada
+            </h3>
+            <p className={tw`text-sm text-center max-w-md`} style={{ color: c.textMuted }}>
+              Nenhum resultado para a pesquisa "{searchTerm}".
             </p>
           </div>
         )}

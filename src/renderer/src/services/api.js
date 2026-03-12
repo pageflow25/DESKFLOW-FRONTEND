@@ -155,8 +155,11 @@ export const dashboardService = {
 
 // Serviço de pedidos em cascata
 export const pedidoService = {
-  getPedidosEscolaCascata: async (escolaId, tipoFormulario = 'MEMOREX', idsFormularios = null, statusIds = null) => {
-    const params = { tipo_formulario: tipoFormulario }
+  getPedidosEscolaCascata: async (escolaId, tipoFormulario = null, idsFormularios = null, statusIds = null) => {
+    const params = {}
+    if (tipoFormulario && String(tipoFormulario).trim()) {
+      params.tipo_formulario = tipoFormulario
+    }
     if (idsFormularios && idsFormularios.length > 0) {
       params.ids_formularios = idsFormularios.join(',')
     }
@@ -164,6 +167,11 @@ export const pedidoService = {
       params.status_ids = statusIds.join(',')
     }
     const response = await api.get(`/api/pedidos/escola/${escolaId}/cascata`, { params })
+    return response.data
+  },
+
+  getStatusDeskflow: async () => {
+    const response = await api.get('/api/pedidos/status-deskflow')
     return response.data
   }
 }

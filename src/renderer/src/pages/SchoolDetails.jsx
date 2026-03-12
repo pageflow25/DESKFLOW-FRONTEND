@@ -100,11 +100,30 @@ export default function SchoolDetails() {
   const [baixarArquivos, setBaixarArquivos] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [idsFormularios, setIdsFormularios] = useState('')
-  const [statusIds, setStatusIds] = useState('1')
+  const [statusOptions, setStatusOptions] = useState([])
+  const [selectedStatusId, setSelectedStatusId] = useState(1)
 
   useEffect(() => {
     loadPedidos()
   }, [escolaId])
+
+  useEffect(() => {
+    loadStatusOptions()
+  }, [])
+
+  const loadStatusOptions = async () => {
+    try {
+      const data = await pedidoService.getStatusDeskflow()
+      const opcoes = Array.isArray(data?.status) ? data.status : []
+      setStatusOptions(opcoes)
+
+      if (opcoes.length > 0 && !opcoes.some(s => s.id === selectedStatusId)) {
+        setSelectedStatusId(opcoes[0].id)
+      }
+    } catch (err) {
+      console.error('Erro ao carregar status:', err)
+    }
+  }
 
   const loadPedidos = async () => {
     try {
@@ -114,11 +133,8 @@ export default function SchoolDetails() {
       const parsedIds = idsFormularios
         ? idsFormularios.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
         : null
-      // Parsear status_ids se fornecidos
-      const parsedStatusIds = statusIds
-        ? statusIds.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
-        : null
-      const data = await pedidoService.getPedidosEscolaCascata(parseInt(escolaId), nomeEscola.toUpperCase(), parsedIds, parsedStatusIds)
+      const parsedStatusIds = selectedStatusId ? [selectedStatusId] : null
+      const data = await pedidoService.getPedidosEscolaCascata(parseInt(escolaId), null, parsedIds, parsedStatusIds)
       setDivisoes(data.dashboard_completo || [])
     } catch (err) {
       console.error('Erro ao carregar pedidos:', err)
@@ -204,10 +220,7 @@ export default function SchoolDetails() {
         ? idsFormularios.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
         : null
 
-      // Parsear status_ids se fornecidos
-      const parsedStatusIds = statusIds
-        ? statusIds.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
-        : null
+      const parsedStatusIds = selectedStatusId ? [selectedStatusId] : null
 
       const result = await orcamentoService.gerarOrcamento(
         parseInt(escolaId),
@@ -387,7 +400,7 @@ export default function SchoolDetails() {
       {/* ============================================ */}
       {/* BARRA DE AÇÕES */}
       {/* ============================================ */}
-      {!loading && divisoes.length > 0 && (
+      {!loading && (
         <div
           className={tw`flex-shrink-0 px-6 py-3 flex items-center justify-between border-b`}
           style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
@@ -434,34 +447,29 @@ export default function SchoolDetails() {
               )}
             </div>
 
-            {/* Filtro por Status IDs */}
+            {/* Filtro por Status */}
             <div className={tw`flex items-center gap-2`}>
-              <input
-                type="text"
-                value={statusIds}
-                onChange={e => setStatusIds(e.target.value)}
-                placeholder="Status IDs (ex: 1,2,3)"
+              <select
+                value={selectedStatusId ?? ''}
+                onChange={e => setSelectedStatusId(e.target.value !== '' ? parseInt(e.target.value) : null)}
                 className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
                 style={{
-                  borderColor: statusIds && statusIds !== '1' ? c.warningText : c.border,
+                  borderColor: c.border,
                   color: c.textPrimary,
-                  width: '180px',
-                  backgroundColor: statusIds && statusIds !== '1' ? c.warningBg : c.inputBg
+                  width: '260px',
+                  backgroundColor: c.inputBg
                 }}
-                onFocus={e => e.target.style.borderColor = c.warningText}
-                onBlur={e => e.target.style.borderColor = statusIds && statusIds !== '1' ? c.warningText : c.border}
+                onFocus={e => e.target.style.borderColor = c.accent}
+                onBlur={e => e.target.style.borderColor = c.border}
                 disabled={generatingBudget}
-              />
-              {statusIds && statusIds !== '1' && (
-                <button
-                  onClick={() => { setStatusIds('1'); setTimeout(() => loadPedidos(), 100) }}
-                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors`}
-                  style={{ borderColor: c.errorBorder, color: c.errorText }}
-                  title="Restaurar padrão (1)"
-                >
-                  ✕
-                </button>
-              )}
+              >
+                <option value="">— Todos os status —</option>
+                {statusOptions.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.descricao} ({status.codigo})
+                  </option>
+                ))}
+              </select>
               <button
                 onClick={() => loadPedidos()}
                 disabled={loading || generatingBudget}
@@ -493,14 +501,14 @@ export default function SchoolDetails() {
             {/* Botão de Ação Principal */}
             <button
               onClick={() => setShowDateModal(true)}
-              disabled={selectedItems.size === 0 || generatingBudget}
+              disabled={selectedItems.size === 0 || generatingBudget || divisoes.length === 0}
               className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${selectedItems.size === 0 || generatingBudget
                 ? 'cursor-not-allowed'
                 : 'hover:shadow-md active:scale-[0.98]'
                 }`}
               style={{
-                backgroundColor: selectedItems.size === 0 ? c.disabledBg : c.successBg2,
-                color: selectedItems.size === 0 ? c.disabledText : '#ffffff'
+                backgroundColor: selectedItems.size === 0 || divisoes.length === 0 ? c.disabledBg : c.successBg2,
+                color: selectedItems.size === 0 || divisoes.length === 0 ? c.disabledText : '#ffffff'
               }}
             >
               {generatingBudget ? (
