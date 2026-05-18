@@ -199,6 +199,8 @@ const setupAutoUpdater = () => {
 }
 
 function createWindow() {
+  const windowIcon = process.platform === 'darwin' ? undefined : icon
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -207,7 +209,7 @@ function createWindow() {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#f3f4f6',
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(windowIcon ? { icon: windowIcon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
