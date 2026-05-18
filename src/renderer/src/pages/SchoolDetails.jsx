@@ -350,11 +350,6 @@ export default function SchoolDetails() {
   const dadosSelecaoAtual = extrairDadosSelecao()
   const datasSelecionadasFormatadas = dadosSelecaoAtual.datasSaida.map(formatDatePtBr)
   const temMultiplasDatasSelecionadas = dadosSelecaoAtual.datasSaida.length > 1
-  const dataEntregaPreSelecionada = (() => {
-    const primeiraDataSelecionada = dadosSelecaoAtual.datasSaida[0]
-    if (!primeiraDataSelecionada || typeof primeiraDataSelecionada !== 'string') return ''
-    return primeiraDataSelecionada.slice(0, 10)
-  })()
   const selectedCount = selectedItems.checkedCount || 0
   const partialCount = selectedItems.partialCount || 0
   const hasSelection = selectedCount > 0
@@ -607,10 +602,7 @@ export default function SchoolDetails() {
 
               <button
                 type="button"
-                onClick={() => {
-                  setDataEntrega(dataEntregaPreSelecionada)
-                  setShowDateModal(true)
-                }}
+                onClick={() => setShowDateModal(true)}
                 disabled={!hasSelection || generatingBudget || divisoes.length === 0}
                 className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${!hasSelection || generatingBudget
                   ? 'cursor-not-allowed'

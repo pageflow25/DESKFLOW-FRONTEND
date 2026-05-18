@@ -52,12 +52,11 @@
   },
   "build": {
     "appId": "com.deskflow.app",
-    
     "productName": "Deskflow", 
-    
     "directories": {
       "buildResources": "build"
     },
+    "icon": "build/icon.png",
     "files": [
       "out/**/*",
       "resources/**/*",
@@ -79,11 +78,13 @@
       }
     ],
     "win": {
+      "icon": "build/icon.png",
       "executableName": "deskflow-frontend",
       "artifactName": "${name}-${version}-setup.${ext}",
       "target": "nsis"
     },
     "mac": {
+      "icon": "build/icon.png",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": [
         { "NSCameraUsageDescription": "Application requests access to the device's camera." },
