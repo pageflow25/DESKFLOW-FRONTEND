@@ -181,14 +181,16 @@ export const pedidoService = {
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null, nomeArquivoFiltro = null) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null, nomeArquivoFiltro = null, persistirResultado = true, aprovarAutomaticamente = true) => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
       datas_saida: datasSaida,
       modo_agrupamento: modoAgrupamento,
+      aprovar_automaticamente: aprovarAutomaticamente,
       gerar_op: gerarOp,
-      baixar_arquivos: baixarArquivos
+      baixar_arquivos: baixarArquivos,
+      persistir_resultado: persistirResultado
     }
     
     // Adicionar parâmetros opcionais se fornecidos

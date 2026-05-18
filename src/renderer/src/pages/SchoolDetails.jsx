@@ -293,25 +293,50 @@ export default function SchoolDetails() {
         : null
 
       const parsedStatusIds = selectedStatusId ? [selectedStatusId] : null
-
-      const result = await orcamentoService.gerarOrcamento(
+      const gerarOrcamentoComModo = (modo, persistirResultado, baixarArquivosEtapa, gerarOpEtapa = gerarOp, aprovarAutomaticamenteEtapa = true) => orcamentoService.gerarOrcamento(
         parseInt(escolaId),
         dadosSelecao.idsProdutos,
         dadosSelecao.datasSaida,
         dadosSelecao.divisoesLogistica.length > 0 ? dadosSelecao.divisoesLogistica : null,
         dadosSelecao.diasUteis.length > 0 ? dadosSelecao.diasUteis : null,
         dataEntregaFormatada,
-        modoAgrupamento,
-        gerarOp,
+        modo,
+        gerarOpEtapa,
         parsedIdsFormularios,
         parsedStatusIds,
-        baixarArquivos,
+        baixarArquivosEtapa,
         dadosSelecao.idsUnidades,
         dadosSelecao.idsArquivos,
-        nomeArquivoFiltro && nomeArquivoFiltro.trim() ? nomeArquivoFiltro.trim() : null
+        nomeArquivoFiltro && nomeArquivoFiltro.trim() ? nomeArquivoFiltro.trim() : null,
+        persistirResultado,
+        aprovarAutomaticamenteEtapa
       )
 
-      setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}${result.grupo_lote_id ? ` — Lote #${result.grupo_lote_id}` : ''}`)
+      if (modoAgrupamento === 'escola_distribuicao') {
+        setProgressoEnvio({ startTime: Date.now(), baixarArquivos: false, etapa: 'escola', aprovarAutomaticamente: true })
+        const resultadoEscola = await gerarOrcamentoComModo('escola', false, false, true, true)
+
+        setProgressoEnvio({ startTime: Date.now(), baixarArquivos: false, etapa: 'distribuicao', aprovarAutomaticamente: true })
+        const resultadoDistribuicao = await gerarOrcamentoComModo('unidade', true, false, false, true)
+
+        setSuccessMessage(
+          `Fluxo concluído! Etapa 1: escola aprovada com OP sem salvar (${resultadoEscola.total_unidades} orçamento). `
+          + `Etapa 2: distribuição aprovada e salva sem gerar OP (${resultadoDistribuicao.total_unidades} unidade(s))`
+          + `${resultadoDistribuicao.grupo_lote_id ? ` — Lote #${resultadoDistribuicao.grupo_lote_id}` : ''}`
+        )
+      } else {
+        const modoUnidadeSemOp = modoAgrupamento === 'unidade'
+        const modoEscolaComOp = modoAgrupamento === 'escola'
+        const result = await gerarOrcamentoComModo(
+          modoAgrupamento,
+          true,
+          modoUnidadeSemOp ? false : baixarArquivos,
+          modoUnidadeSemOp ? false : modoEscolaComOp ? true : gerarOp,
+          true
+        )
+
+        setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}${result.grupo_lote_id ? ` — Lote #${result.grupo_lote_id}` : ''}`)
+      }
       setTimeout(() => setSuccessMessage(''), 5000)
 
       // Recarregar dados da página após processamento
@@ -777,7 +802,7 @@ export default function SchoolDetails() {
             onClick={() => !generatingBudget && setShowDateModal(false)}
           >
             <div
-              className={tw`rounded-xl shadow-2xl p-6 w-full max-w-md mx-4`}
+              className={tw`rounded-xl shadow-2xl p-6 w-full max-w-2xl mx-4`}
               style={{ backgroundColor: c.modalBg }}
               onClick={e => e.stopPropagation()}
             >
@@ -825,7 +850,7 @@ export default function SchoolDetails() {
                 <label className={tw`block text-sm font-medium mb-2`} style={{ color: c.textPrimary }}>
                   Modo de Agrupamento
                 </label>
-                <div className={tw`flex gap-3`}>
+                <div className={tw`grid grid-cols-1 sm:grid-cols-3 gap-3`}>
                   <button
                     type="button"
                     onClick={() => setModoAgrupamento('unidade')}
@@ -858,6 +883,23 @@ export default function SchoolDetails() {
                     <div className={tw`font-semibold mb-1`}>Por Escola</div>
                     <div className={tw`text-xs`} style={{ color: c.textMuted }}>
                       Agrupa e soma todas as unidades
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModoAgrupamento('escola_distribuicao')}
+                    disabled={generatingBudget}
+                    className={tw`px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
+                    style={{
+                      borderColor: modoAgrupamento === 'escola_distribuicao' ? c.accent : c.border,
+                      backgroundColor: modoAgrupamento === 'escola_distribuicao' ? c.accentBg : c.inputBg,
+                      color: modoAgrupamento === 'escola_distribuicao' ? c.accentText : c.textSecondary,
+                      boxShadow: modoAgrupamento === 'escola_distribuicao' ? `0 0 0 1px ${c.accent}` : 'none'
+                    }}
+                  >
+                    <div className={tw`font-semibold mb-1`}>Escola + Distribuição</div>
+                    <div className={tw`text-xs`} style={{ color: c.textMuted }}>
+                      Escola gera OP sem salvar; distribuição aprova sem OP
                     </div>
                   </button>
                 </div>
@@ -972,6 +1014,17 @@ export default function SchoolDetails() {
       {generatingBudget && progressoEnvio && (() => {
         const pct = Math.min(92, Math.round(100 * (1 - Math.exp(-elapsedSecs / 25))))
         const hasFase3 = progressoEnvio.baixarArquivos
+        const etapaAtual = progressoEnvio.etapa
+        const etapaTitulo = etapaAtual === 'escola'
+          ? 'Etapa 1: Por Escola'
+          : etapaAtual === 'distribuicao'
+            ? 'Etapa 2: Por Distribuição'
+            : 'Processando Pedido'
+        const etapaDescricao = etapaAtual === 'escola'
+          ? 'Aprovando OP sem salvar na base de dados'
+          : etapaAtual === 'distribuicao'
+            ? 'Aprovando orçamento e salvando sem gerar OP'
+            : nomeEscola
         let faseAtual = 1
         if (elapsedSecs >= 3 && elapsedSecs < 13) faseAtual = 2
         else if (elapsedSecs >= 13 && (elapsedSecs < 23 || !hasFase3)) faseAtual = 3
@@ -979,8 +1032,8 @@ export default function SchoolDetails() {
 
         const fases = [
           { id: 1, label: 'Calculando orçamentos', desc: 'Processando dados localmente...' },
-          { id: 2, label: 'Enviando para API Bremen', desc: 'Fase 1 — Gerando orçamento...' },
-          { id: 3, label: 'Aprovando pedido', desc: 'Fase 2 — Processando aprovação...' },
+          { id: 2, label: 'Enviando para API Bremen', desc: etapaAtual === 'escola' ? 'Fase 1 — Gerando orçamento sem salvar...' : 'Fase 1 — Gerando orçamento para salvar...' },
+          { id: 3, label: etapaAtual === 'distribuicao' ? 'Aprovando sem OP' : 'Aprovando pedido', desc: etapaAtual === 'escola' ? 'Fase 2 — Gerando OP sem persistência...' : etapaAtual === 'distribuicao' ? 'Fase 2 — Gerando PV sem OP...' : 'Fase 2 — Processando aprovação...' },
           ...(hasFase3 ? [{ id: 4, label: 'Baixando arquivos', desc: 'Fase 3 — Download dos PDFs...' }] : []),
         ]
 
@@ -1000,8 +1053,8 @@ export default function SchoolDetails() {
               {/* Header */}
               <div className={tw`flex flex-col items-center mb-5`}>
                 <Mascote pose="processando" size={96} style={{ marginBottom: '12px' }} />
-                <h3 className={tw`text-base font-bold`} style={{ color: c.textPrimary }}>Processando Pedido</h3>
-                <p className={tw`text-xs mt-0.5`} style={{ color: c.textSecondary }}>{nomeEscola}</p>
+                <h3 className={tw`text-base font-bold`} style={{ color: c.textPrimary }}>{etapaTitulo}</h3>
+                <p className={tw`text-xs mt-0.5`} style={{ color: c.textSecondary }}>{etapaDescricao}</p>
               </div>
 
               {/* Barra de progresso */}
