@@ -155,7 +155,7 @@ export const dashboardService = {
 
 // Serviço de pedidos em cascata
 export const pedidoService = {
-  getPedidosEscolaCascata: async (escolaId, tipoFormulario = null, idsFormularios = null, statusIds = null) => {
+  getPedidosEscolaCascata: async (escolaId, tipoFormulario = null, idsFormularios = null, statusIds = null, nomeArquivoFiltro = null) => {
     const params = {}
     if (tipoFormulario && String(tipoFormulario).trim()) {
       params.tipo_formulario = tipoFormulario
@@ -165,6 +165,9 @@ export const pedidoService = {
     }
     if (statusIds && statusIds.length > 0) {
       params.status_ids = statusIds.join(',')
+    }
+    if (nomeArquivoFiltro && String(nomeArquivoFiltro).trim()) {
+      params.nome_arquivo_filtro = String(nomeArquivoFiltro).trim()
     }
     const response = await api.get(`/api/pedidos/escola/${escolaId}/cascata`, { params })
     return response.data
@@ -178,7 +181,7 @@ export const pedidoService = {
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null, nomeArquivoFiltro = null) => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
@@ -209,6 +212,9 @@ export const orcamentoService = {
     }
     if (idsArquivos && idsArquivos.length > 0) {
       payload.ids_arquivos = idsArquivos
+    }
+    if (nomeArquivoFiltro && nomeArquivoFiltro.trim()) {
+      payload.nome_arquivo_filtro = nomeArquivoFiltro.trim()
     }
     
     const response = await api.post('/api/orcamento/gerar', payload)

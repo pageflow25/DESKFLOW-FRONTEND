@@ -122,6 +122,7 @@ export default function SchoolDetails() {
   const [baixarArquivos, setBaixarArquivos] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [idsFormularios, setIdsFormularios] = useState('')
+  const [nomeArquivoFiltro, setNomeArquivoFiltro] = useState('')
   const [statusOptions, setStatusOptions] = useState([])
   const [selectedStatusId, setSelectedStatusId] = useState(1)
   const [progressoEnvio, setProgressoEnvio] = useState(null)
@@ -170,7 +171,13 @@ export default function SchoolDetails() {
         ? idsFormularios.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
         : null
       const parsedStatusIds = selectedStatusId ? [selectedStatusId] : null
-      const data = await pedidoService.getPedidosEscolaCascata(parseInt(escolaId), null, parsedIds, parsedStatusIds)
+      const data = await pedidoService.getPedidosEscolaCascata(
+        parseInt(escolaId),
+        null,
+        parsedIds,
+        parsedStatusIds,
+        nomeArquivoFiltro
+      )
       setDivisoes(data.dashboard_completo || [])
     } catch (err) {
       console.error('Erro ao carregar pedidos:', err)
@@ -300,7 +307,8 @@ export default function SchoolDetails() {
         parsedStatusIds,
         baixarArquivos,
         dadosSelecao.idsUnidades,
-        dadosSelecao.idsArquivos
+        dadosSelecao.idsArquivos,
+        nomeArquivoFiltro && nomeArquivoFiltro.trim() ? nomeArquivoFiltro.trim() : null
       )
 
       setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}${result.grupo_lote_id ? ` — Lote #${result.grupo_lote_id}` : ''}`)
@@ -350,6 +358,11 @@ export default function SchoolDetails() {
   const dadosSelecaoAtual = extrairDadosSelecao()
   const datasSelecionadasFormatadas = dadosSelecaoAtual.datasSaida.map(formatDatePtBr)
   const temMultiplasDatasSelecionadas = dadosSelecaoAtual.datasSaida.length > 1
+  const dataEntregaPreSelecionada = (() => {
+    const primeiraDataSelecionada = dadosSelecaoAtual.datasSaida[0]
+    if (!primeiraDataSelecionada || typeof primeiraDataSelecionada !== 'string') return ''
+    return primeiraDataSelecionada.slice(0, 10)
+  })()
   const selectedCount = selectedItems.checkedCount || 0
   const partialCount = selectedItems.partialCount || 0
   const hasSelection = selectedCount > 0
@@ -550,6 +563,36 @@ export default function SchoolDetails() {
               </div>
 
               <div className={tw`flex items-center gap-2`}>
+                <input
+                  type="text"
+                  value={nomeArquivoFiltro}
+                  onChange={e => setNomeArquivoFiltro(e.target.value)}
+                  placeholder="Filtrar por nome (ex: MODELO1)"
+                  className={tw`px-3 py-2 rounded-lg border text-sm outline-none transition-colors`}
+                  style={{
+                    borderColor: nomeArquivoFiltro ? c.accent : c.border,
+                    color: c.textPrimary,
+                    width: '230px',
+                    backgroundColor: nomeArquivoFiltro ? c.accentBg : c.inputBg
+                  }}
+                  onFocus={e => e.target.style.borderColor = c.accent}
+                  onBlur={e => e.target.style.borderColor = nomeArquivoFiltro ? c.accent : c.border}
+                  disabled={generatingBudget}
+                />
+                {nomeArquivoFiltro && (
+                  <button
+                    type="button"
+                    onClick={() => { setNomeArquivoFiltro(''); setTimeout(() => loadPedidos(), 100) }}
+                    className={tw`px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors`}
+                    style={{ borderColor: c.errorBorder, color: c.errorText, backgroundColor: c.cardBg }}
+                    title="Limpar filtro de nome"
+                  >
+                    X
+                  </button>
+                )}
+              </div>
+
+              <div className={tw`flex items-center gap-2`}>
                 <select
                   value={selectedStatusId ?? ''}
                   onChange={e => setSelectedStatusId(e.target.value !== '' ? parseInt(e.target.value) : null)}
@@ -602,7 +645,10 @@ export default function SchoolDetails() {
 
               <button
                 type="button"
-                onClick={() => setShowDateModal(true)}
+                onClick={() => {
+                  setDataEntrega(dataEntregaPreSelecionada)
+                  setShowDateModal(true)
+                }}
                 disabled={!hasSelection || generatingBudget || divisoes.length === 0}
                 className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${!hasSelection || generatingBudget
                   ? 'cursor-not-allowed'
