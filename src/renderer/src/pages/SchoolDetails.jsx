@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -57,6 +57,16 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
     </svg>
   ),
+  ExpandAll: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5M3.75 15h16.5M8.25 4.5L12 8.25l3.75-3.75M8.25 19.5L12 15.75l3.75 3.75" />
+    </svg>
+  ),
+  CollapseAll: ({ className, style }) => (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5M3.75 15h16.5M8.25 8.25L12 4.5l3.75 3.75M8.25 15.75L12 19.5l3.75-3.75" />
+    </svg>
+  ),
   Sun: ({ className, style }) => (
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
@@ -76,6 +86,16 @@ const formatDatePtBr = (isoDate) => {
   return `${day}/${month}/${year}`
 }
 
+const EMPTY_SELECTION = {
+  checkedIds: new Set(),
+  partialIds: new Set(),
+  checkedNodes: [],
+  selectedLeaves: [],
+  checkedCount: 0,
+  partialCount: 0,
+  activeCount: 0
+}
+
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
@@ -90,7 +110,8 @@ export default function SchoolDetails() {
   const [divisoes, setDivisoes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedItems, setSelectedItems] = useState(new Set())
+  const [selectedItems, setSelectedItems] = useState(EMPTY_SELECTION)
+  const [treeExpandCommand, setTreeExpandCommand] = useState(null)
   const [generatingBudget, setGeneratingBudget] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [showDateModal, setShowDateModal] = useState(false)
@@ -150,8 +171,16 @@ export default function SchoolDetails() {
     loadPedidos()
   }
 
-  const handleSelectionChange = (selection) => {
-    setSelectedItems(selection)
+  const handleSelectionChange = useCallback((selection) => {
+    setSelectedItems(selection || EMPTY_SELECTION)
+  }, [])
+
+  const handleExpandAll = () => {
+    setTreeExpandCommand({ type: 'expand-all', issuedAt: Date.now() })
+  }
+
+  const handleCollapseAll = () => {
+    setTreeExpandCommand({ type: 'collapse-all', issuedAt: Date.now() })
   }
 
   const extrairDadosSelecao = () => {
@@ -159,37 +188,54 @@ export default function SchoolDetails() {
     const datasSaida = new Set()
     const divisoesLogistica = new Set()
     const diasUteis = new Set()
+    const idsUnidades = new Set()
+    const idsArquivos = new Set()
 
-    selectedItems.forEach(nodeId => {
-      const parts = nodeId.split('-')
+    const nodesToExtract = selectedItems.selectedLeaves?.length > 0
+      ? selectedItems.selectedLeaves
+      : selectedItems.checkedNodes || []
 
-      if (parts.includes('produto')) {
-        const divIndex = parseInt(parts[1])
-        const produtoIndex = parseInt(parts[3])
+    nodesToExtract.forEach(({ path }) => {
+      const divIndex = path?.divisao
+      const produtoIndex = path?.produto
+      const dataIndex = path?.data
+      const unidadeIndex = path?.unidade
 
-        if (divisoes[divIndex] && divisoes[divIndex].produtos[produtoIndex]) {
-          const produto = divisoes[divIndex].produtos[produtoIndex]
-          const divisao = divisoes[divIndex]
+      if (divIndex === undefined || produtoIndex === undefined) return
 
-          if (divisao.divisao_logistica) {
-            divisoesLogistica.add(divisao.divisao_logistica)
-          }
+      const divisao = divisoes[divIndex]
+      const produto = divisao?.produtos?.[produtoIndex]
 
-          if (divisao.dias_uteis && divisao.dias_uteis !== 'Sem dias uteis') {
-            const diasUteisNum = parseInt(divisao.dias_uteis)
-            if (!isNaN(diasUteisNum)) {
-              diasUteis.add(diasUteisNum)
-            }
-          }
+      if (!divisao || !produto) return
 
-          idsProdutos.add(produto.id_produto)
+      if (divisao.divisao_logistica) {
+        divisoesLogistica.add(divisao.divisao_logistica)
+      }
 
-          if (parts.includes('data')) {
-            const dataIndex = parseInt(parts[5])
-            if (produto.datas[dataIndex] && produto.datas[dataIndex].data_saida !== 'Sem data saida') {
-              datasSaida.add(produto.datas[dataIndex].data_saida)
-            }
-          }
+      if (divisao.dias_uteis && divisao.dias_uteis !== 'Sem dias uteis') {
+        const diasUteisNum = parseInt(divisao.dias_uteis)
+        if (!isNaN(diasUteisNum)) {
+          diasUteis.add(diasUteisNum)
+        }
+      }
+
+      idsProdutos.add(produto.id_produto)
+
+      if (dataIndex !== undefined && produto.datas?.[dataIndex]?.data_saida !== 'Sem data saida') {
+        datasSaida.add(produto.datas[dataIndex].data_saida)
+      }
+
+      // Extrair ID da unidade quando a seleção é ao nível de unidade ou arquivo
+      if (unidadeIndex !== undefined && dataIndex !== undefined) {
+        const unidadeObj = produto.datas?.[dataIndex]?.unidades?.[unidadeIndex]
+        if (unidadeObj?.id) {
+          idsUnidades.add(unidadeObj.id)
+        }
+
+        // Extrair ID do arquivo quando a seleção é ao nível de arquivo
+        const arquivoIndex = path?.arquivo
+        if (arquivoIndex !== undefined && unidadeObj?.arquivos?.[arquivoIndex]?.id) {
+          idsArquivos.add(unidadeObj.arquivos[arquivoIndex].id)
         }
       }
     })
@@ -198,12 +244,14 @@ export default function SchoolDetails() {
       idsProdutos: Array.from(idsProdutos),
       datasSaida: Array.from(datasSaida).sort(),
       divisoesLogistica: Array.from(divisoesLogistica),
-      diasUteis: Array.from(diasUteis)
+      diasUteis: Array.from(diasUteis),
+      idsUnidades: idsUnidades.size > 0 ? Array.from(idsUnidades) : null,
+      idsArquivos: idsArquivos.size > 0 ? Array.from(idsArquivos) : null
     }
   }
 
   const handleGenerateBudget = async () => {
-    if (selectedItems.size === 0) return
+    if (selectedItems.checkedCount === 0) return
 
     try {
       setGeneratingBudget(true)
@@ -233,7 +281,9 @@ export default function SchoolDetails() {
         gerarOp,
         parsedIdsFormularios,
         parsedStatusIds,
-        baixarArquivos
+        baixarArquivos,
+        dadosSelecao.idsUnidades,
+        dadosSelecao.idsArquivos
       )
 
       setSuccessMessage(`Orçamento gerado com sucesso! ${result.total_unidades} unidade(s) — Modo: ${modoAgrupamento === 'escola' ? 'Agrupado por Escola' : 'Por Unidade'}${result.grupo_lote_id ? ` — Lote #${result.grupo_lote_id}` : ''}`)
@@ -282,6 +332,9 @@ export default function SchoolDetails() {
   const dadosSelecaoAtual = extrairDadosSelecao()
   const datasSelecionadasFormatadas = dadosSelecaoAtual.datasSaida.map(formatDatePtBr)
   const temMultiplasDatasSelecionadas = dadosSelecaoAtual.datasSaida.length > 1
+  const selectedCount = selectedItems.checkedCount || 0
+  const partialCount = selectedItems.partialCount || 0
+  const hasSelection = selectedCount > 0
 
   return (
     <div className={tw`h-screen flex flex-col`} style={{ backgroundColor: c.pageBg }}>
@@ -402,127 +455,159 @@ export default function SchoolDetails() {
       {/* ============================================ */}
       {!loading && (
         <div
-          className={tw`flex-shrink-0 px-6 py-3 flex items-center justify-between border-b`}
+          className={tw`flex-shrink-0 px-6 py-3 border-b`}
           style={{ backgroundColor: c.sectionBg, borderColor: c.border }}
         >
-          {/* Contador de seleção + Filtro de Formulários */}
-          <div className={tw`flex items-center gap-3`}>
-            <div
-              className={tw`px-3 py-1.5 rounded-full text-sm font-medium`}
-              style={{
-                backgroundColor: selectedItems.size > 0 ? c.accentBg : c.sectionBg,
-                color: selectedItems.size > 0 ? c.accentText : c.textSecondary
-              }}
-            >
-              {selectedItems.size} {selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'}
-            </div>
-
-            {/* Filtro por IDs de Formulários */}
-            <div className={tw`flex items-center gap-2`}>
-              <input
-                type="text"
-                value={idsFormularios}
-                onChange={e => setIdsFormularios(e.target.value)}
-                placeholder="Filtrar por IDs formulários (ex: 1,2,3)"
-                className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
+          <div className={tw`flex flex-wrap items-center justify-between gap-3`}>
+            <div className={tw`flex flex-wrap items-center gap-3`}>
+              <div
+                className={tw`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium`}
                 style={{
-                  borderColor: idsFormularios ? c.accent : c.border,
-                  color: c.textPrimary,
-                  width: '280px',
-                  backgroundColor: idsFormularios ? c.accentBg : c.inputBg
+                  borderColor: hasSelection ? c.accent : c.border,
+                  backgroundColor: hasSelection ? c.accentBg : c.cardBg,
+                  color: hasSelection ? c.accentText : c.textSecondary
                 }}
-                onFocus={e => e.target.style.borderColor = c.accent}
-                onBlur={e => e.target.style.borderColor = idsFormularios ? c.accent : c.border}
-                disabled={generatingBudget}
-              />
-              {idsFormularios && (
+              >
+                <span>{selectedCount} {selectedCount === 1 ? 'item marcado' : 'itens marcados'}</span>
+                {partialCount > 0 && (
+                  <span className={tw`px-2 py-0.5 rounded-full text-xs`} style={{ backgroundColor: c.treePartialBadgeBg || c.warningBadgeBg, color: c.treePartialText || c.warningText }}>
+                    {partialCount} parcial{partialCount === 1 ? '' : 'is'}
+                  </span>
+                )}
+              </div>
+
+              <div className={tw`flex items-center gap-2`}>
                 <button
-                  onClick={() => { setIdsFormularios(''); setTimeout(() => loadPedidos(), 100) }}
-                  className={tw`px-2 py-1.5 rounded-lg text-xs font-medium border transition-colors`}
-                  style={{ borderColor: c.errorBorder, color: c.errorText }}
-                  title="Limpar filtro"
+                  type="button"
+                  onClick={handleExpandAll}
+                  disabled={divisoes.length === 0 || generatingBudget}
+                  className={tw`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all active:scale-[0.97] disabled:opacity-50`}
+                  style={{ borderColor: c.border, color: c.textSecondary, backgroundColor: c.cardBg }}
+                  title="Expandir todos"
                 >
-                  ✕
+                  <Icons.ExpandAll className={tw`w-4 h-4`} />
+                  Expandir todos
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={handleCollapseAll}
+                  disabled={divisoes.length === 0 || generatingBudget}
+                  className={tw`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all active:scale-[0.97] disabled:opacity-50`}
+                  style={{ borderColor: c.border, color: c.textSecondary, backgroundColor: c.cardBg }}
+                  title="Recolher todos"
+                >
+                  <Icons.CollapseAll className={tw`w-4 h-4`} />
+                  Recolher todos
+                </button>
+              </div>
+
+              <div className={tw`flex items-center gap-2`}>
+                <input
+                  type="text"
+                  value={idsFormularios}
+                  onChange={e => setIdsFormularios(e.target.value)}
+                  placeholder="IDs formulários (ex: 1,2,3)"
+                  className={tw`px-3 py-2 rounded-lg border text-sm outline-none transition-colors`}
+                  style={{
+                    borderColor: idsFormularios ? c.accent : c.border,
+                    color: c.textPrimary,
+                    width: '230px',
+                    backgroundColor: idsFormularios ? c.accentBg : c.inputBg
+                  }}
+                  onFocus={e => e.target.style.borderColor = c.accent}
+                  onBlur={e => e.target.style.borderColor = idsFormularios ? c.accent : c.border}
+                  disabled={generatingBudget}
+                />
+                {idsFormularios && (
+                  <button
+                    type="button"
+                    onClick={() => { setIdsFormularios(''); setTimeout(() => loadPedidos(), 100) }}
+                    className={tw`px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors`}
+                    style={{ borderColor: c.errorBorder, color: c.errorText, backgroundColor: c.cardBg }}
+                    title="Limpar filtro"
+                  >
+                    X
+                  </button>
+                )}
+              </div>
+
+              <div className={tw`flex items-center gap-2`}>
+                <select
+                  value={selectedStatusId ?? ''}
+                  onChange={e => setSelectedStatusId(e.target.value !== '' ? parseInt(e.target.value) : null)}
+                  className={tw`px-3 py-2 rounded-lg border text-sm outline-none transition-colors`}
+                  style={{
+                    borderColor: c.border,
+                    color: c.textPrimary,
+                    width: '230px',
+                    backgroundColor: c.inputBg
+                  }}
+                  onFocus={e => e.target.style.borderColor = c.accent}
+                  onBlur={e => e.target.style.borderColor = c.border}
+                  disabled={generatingBudget}
+                >
+                  <option value="">Todos os status</option>
+                  {statusOptions.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.descricao} ({status.codigo})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => loadPedidos()}
+                  disabled={loading || generatingBudget}
+                  className={tw`px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50`}
+                  style={{ borderColor: c.accent, color: c.accentText, backgroundColor: c.accentBg }}
+                  title="Aplicar filtro"
+                >
+                  Filtrar
+                </button>
+              </div>
             </div>
 
-            {/* Filtro por Status */}
-            <div className={tw`flex items-center gap-2`}>
-              <select
-                value={selectedStatusId ?? ''}
-                onChange={e => setSelectedStatusId(e.target.value !== '' ? parseInt(e.target.value) : null)}
-                className={tw`px-3 py-1.5 rounded-lg border text-sm outline-none transition-colors`}
-                style={{
-                  borderColor: c.border,
-                  color: c.textPrimary,
-                  width: '260px',
-                  backgroundColor: c.inputBg
-                }}
-                onFocus={e => e.target.style.borderColor = c.accent}
-                onBlur={e => e.target.style.borderColor = c.border}
-                disabled={generatingBudget}
-              >
-                <option value="">— Todos os status —</option>
-                {statusOptions.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.descricao} ({status.codigo})
-                  </option>
-                ))}
-              </select>
+            <div className={tw`flex items-center gap-3`}>
               <button
-                onClick={() => loadPedidos()}
-                disabled={loading || generatingBudget}
-                className={tw`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50`}
-                style={{ borderColor: c.accent, color: c.accentText, backgroundColor: c.accentBg }}
-                title="Aplicar filtro"
+                type="button"
+                onClick={handleRefresh}
+                disabled={loading || refreshing || generatingBudget}
+                className={tw`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm border transition-all active:scale-[0.97] disabled:opacity-50`}
+                style={{ borderColor: c.border, color: c.accent, backgroundColor: c.cardBg }}
+                title="Recarregar dados"
               >
-                Filtrar
+                <Icons.Refresh
+                  className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                  style={{ color: c.accent }}
+                />
+                Recarregar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDateModal(true)}
+                disabled={!hasSelection || generatingBudget || divisoes.length === 0}
+                className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${!hasSelection || generatingBudget
+                  ? 'cursor-not-allowed'
+                  : 'hover:shadow-md active:scale-[0.98]'
+                  }`}
+                style={{
+                  backgroundColor: !hasSelection || divisoes.length === 0 ? c.disabledBg : c.successBg2,
+                  color: !hasSelection || divisoes.length === 0 ? c.disabledText : '#ffffff'
+                }}
+              >
+                {generatingBudget ? (
+                  <>
+                    <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Icons.DocumentCheck className={tw`w-4 h-4`} />
+                    Gerar Orçamento
+                  </>
+                )}
               </button>
             </div>
-          </div>
-
-          <div className={tw`flex items-center gap-3`}>
-            {/* Botão Recarregar */}
-            <button
-              onClick={handleRefresh}
-              disabled={loading || refreshing || generatingBudget}
-              className={tw`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm border transition-all active:scale-[0.97] disabled:opacity-50`}
-              style={{ borderColor: c.border, color: c.accent, backgroundColor: c.cardBg }}
-              title="Recarregar dados"
-            >
-              <Icons.Refresh
-                className={tw`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-                style={{ color: c.accent }}
-              />
-              Recarregar
-            </button>
-
-            {/* Botão de Ação Principal */}
-            <button
-              onClick={() => setShowDateModal(true)}
-              disabled={selectedItems.size === 0 || generatingBudget || divisoes.length === 0}
-              className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${selectedItems.size === 0 || generatingBudget
-                ? 'cursor-not-allowed'
-                : 'hover:shadow-md active:scale-[0.98]'
-                }`}
-              style={{
-                backgroundColor: selectedItems.size === 0 || divisoes.length === 0 ? c.disabledBg : c.successBg2,
-                color: selectedItems.size === 0 || divisoes.length === 0 ? c.disabledText : '#ffffff'
-              }}
-            >
-              {generatingBudget ? (
-                <>
-                  <Icons.Spinner className={tw`w-4 h-4 animate-spin`} />
-                  Gerando...
-                </>
-              ) : (
-                <>
-                  <Icons.DocumentCheck className={tw`w-4 h-4`} />
-                  Gerar Orçamento
-                </>
-              )}
-            </button>
           </div>
         </div>
       )}
@@ -612,6 +697,7 @@ export default function SchoolDetails() {
           <TreeGrid
             data={divisoes}
             onSelectionChange={handleSelectionChange}
+            expandCommand={treeExpandCommand}
           />
         )}
       </main>
@@ -759,8 +845,9 @@ export default function SchoolDetails() {
                 style={{ backgroundColor: c.sectionBg, border: `1px solid ${c.border}` }}
               >
                 <p className={tw`text-sm`} style={{ color: c.textSecondary }}>
-                  <span className={tw`font-semibold`} style={{ color: c.textPrimary }}>{selectedItems.size}</span>
-                  {' '}{selectedItems.size === 1 ? 'item selecionado' : 'itens selecionados'} para o orçamento
+                  <span className={tw`font-semibold`} style={{ color: c.textPrimary }}>{selectedCount}</span>
+                  {' '}{selectedCount === 1 ? 'item marcado' : 'itens marcados'} para o orçamento
+                  {partialCount > 0 && ` (${partialCount} parcial${partialCount === 1 ? '' : 'is'})`}
                 </p>
 
                 {dadosSelecaoAtual.datasSaida.length > 0 && (

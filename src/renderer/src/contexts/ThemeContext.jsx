@@ -57,6 +57,12 @@ const lightColors = {
   rowDeepest: '#fdfdfd',
   divGradient: 'bg-gradient-to-r from-slate-100 to-slate-50',
   divSelectedBg: 'bg-blue-50 border-blue-300',
+  treeSelectedBg: '#eff6ff',
+  treeSelectedBorder: '#93c5fd',
+  treePartialBg: '#fffbeb',
+  treePartialBorder: '#f59e0b',
+  treePartialBadgeBg: '#fef3c7',
+  treePartialText: '#92400e',
 
   // Icons
   iconFolder: '#f59e0b',
@@ -143,6 +149,12 @@ const darkColors = {
   rowDeepest: '#162032',
   divGradient: 'bg-gradient-to-r from-slate-800 to-slate-700',
   divSelectedBg: 'bg-blue-900/40 border-blue-700',
+  treeSelectedBg: '#1e3a5f',
+  treeSelectedBorder: '#60a5fa',
+  treePartialBg: '#451a03',
+  treePartialBorder: '#b45309',
+  treePartialBadgeBg: '#78350f',
+  treePartialText: '#fbbf24',
 
   // Icons
   iconFolder: '#fbbf24',

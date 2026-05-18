@@ -178,7 +178,7 @@ export const pedidoService = {
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null) => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
@@ -203,6 +203,12 @@ export const orcamentoService = {
     }
     if (statusIds && statusIds.length > 0) {
       payload.status_ids = statusIds
+    }
+    if (idsUnidades && idsUnidades.length > 0) {
+      payload.ids_unidades = idsUnidades
+    }
+    if (idsArquivos && idsArquivos.length > 0) {
+      payload.ids_arquivos = idsArquivos
     }
     
     const response = await api.post('/api/orcamento/gerar', payload)
