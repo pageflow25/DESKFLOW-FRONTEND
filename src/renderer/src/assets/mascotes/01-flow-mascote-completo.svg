@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 720" width="680" height="720" role="img">
+<title>Flow — mascote do PageFlow</title>
+<desc>Mascote 3D cartoon moderno em formato de folha de papel arredondada, com olhos digitais, segurando um tablet holográfico.</desc>
+<defs>
+<radialGradient id="bgGlow" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#EEEDFE" stop-opacity="1"/><stop offset="60%" stop-color="#F5F4FE" stop-opacity="0.6"/><stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+<linearGradient id="bodyGrad" x1="20%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="45%" stop-color="#F8F9FF"/><stop offset="100%" stop-color="#D8DCF5"/></linearGradient>
+<linearGradient id="bodyShade" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7F77DD" stop-opacity="0"/><stop offset="100%" stop-color="#534AB7" stop-opacity="0.35"/></linearGradient>
+<linearGradient id="foldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#CECBF6"/><stop offset="100%" stop-color="#7F77DD"/></linearGradient>
+<radialGradient id="faceGrad" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#3C3489"/><stop offset="55%" stop-color="#26215C"/><stop offset="100%" stop-color="#100B33"/></radialGradient>
+<radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="35%" stop-color="#AFE4FF"/><stop offset="75%" stop-color="#378ADD"/><stop offset="100%" stop-color="#185FA5"/></radialGradient>
+<radialGradient id="eyeCore" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="60%" stop-color="#E6F1FB" stop-opacity="0.9"/><stop offset="100%" stop-color="#85B7EB" stop-opacity="0"/></radialGradient>
+<linearGradient id="tabletGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#AFA9EC"/><stop offset="100%" stop-color="#534AB7"/></linearGradient>
+<linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1D2A6B"/><stop offset="100%" stop-color="#3C3489"/></linearGradient>
+<linearGradient id="holoGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#85B7EB" stop-opacity="0.85"/><stop offset="100%" stop-color="#7F77DD" stop-opacity="0.15"/></linearGradient>
+<linearGradient id="paperA" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CECBF6"/></linearGradient>
+<linearGradient id="paperB" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E6F1FB"/><stop offset="100%" stop-color="#85B7EB"/></linearGradient>
+<radialGradient id="floorShadow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#26215C" stop-opacity="0.35"/><stop offset="60%" stop-color="#26215C" stop-opacity="0.12"/><stop offset="100%" stop-color="#26215C" stop-opacity="0"/></radialGradient>
+<linearGradient id="rimLight" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+</defs>
+<rect x="0" y="0" width="680" height="720" fill="url(#bgGlow)"/>
+<circle cx="110" cy="180" r="4" fill="#7F77DD" opacity="0.4"/>
+<circle cx="95" cy="240" r="3" fill="#378ADD" opacity="0.5"/>
+<circle cx="135" cy="310" r="2.5" fill="#AFA9EC" opacity="0.6"/>
+<circle cx="580" cy="160" r="3" fill="#378ADD" opacity="0.5"/>
+<circle cx="610" cy="220" r="4" fill="#7F77DD" opacity="0.4"/>
+<circle cx="555" cy="290" r="2.5" fill="#AFA9EC" opacity="0.6"/>
+<circle cx="80" cy="430" r="3" fill="#85B7EB" opacity="0.5"/>
+<circle cx="600" cy="430" r="3.5" fill="#AFA9EC" opacity="0.5"/>
+<g transform="translate(85 350) rotate(-18)" opacity="0.85">
+<rect x="0" y="0" width="48" height="62" rx="6" fill="url(#paperA)" stroke="#AFA9EC" stroke-width="1"/>
+<line x1="8" y1="14" x2="38" y2="14" stroke="#7F77DD" stroke-width="1.5" opacity="0.5"/>
+<line x1="8" y1="22" x2="32" y2="22" stroke="#7F77DD" stroke-width="1.5" opacity="0.5"/>
+<line x1="8" y1="30" x2="36" y2="30" stroke="#7F77DD" stroke-width="1.5" opacity="0.5"/>
+<line x1="8" y1="38" x2="28" y2="38" stroke="#7F77DD" stroke-width="1.5" opacity="0.5"/>
+</g>
+<g transform="translate(572 360) rotate(22)" opacity="0.9">
+<rect x="0" y="0" width="56" height="72" rx="7" fill="url(#paperB)" stroke="#7F77DD" stroke-width="1"/>
+<line x1="10" y1="16" x2="44" y2="16" stroke="#185FA5" stroke-width="1.5" opacity="0.5"/>
+<line x1="10" y1="26" x2="38" y2="26" stroke="#185FA5" stroke-width="1.5" opacity="0.5"/>
+<line x1="10" y1="36" x2="42" y2="36" stroke="#185FA5" stroke-width="1.5" opacity="0.5"/>
+<line x1="10" y1="46" x2="34" y2="46" stroke="#185FA5" stroke-width="1.5" opacity="0.5"/>
+</g>
+<ellipse cx="340" cy="650" rx="170" ry="22" fill="url(#floorShadow)"/>
+<path d="M 220 220 Q 220 170 270 165 L 410 165 Q 440 165 455 185 L 495 230 Q 510 250 510 280 L 510 560 Q 510 615 455 625 L 235 625 Q 180 620 180 565 L 180 280 Q 180 230 220 220 Z" fill="url(#bodyGrad)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 510 280 L 510 560 Q 510 615 455 625 L 380 625 Q 460 615 470 560 L 470 290 Q 465 260 450 245 Z" fill="url(#bodyShade)" opacity="0.65"/>
+<path d="M 220 220 Q 220 170 270 165 L 410 165 Q 440 165 455 185 L 455 195 Q 440 178 410 178 L 272 178 Q 232 182 232 222 Z" fill="url(#rimLight)" opacity="0.7"/>
+<path d="M 455 185 L 495 230 L 458 230 Q 448 230 448 220 L 448 188 Z" fill="url(#foldGrad)" stroke="#534AB7" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 455 188 L 490 226 L 460 226 Q 452 226 452 218 Z" fill="#3C3489" opacity="0.25"/>
+<rect x="232" y="262" width="246" height="200" rx="46" fill="url(#faceGrad)" stroke="#26215C" stroke-width="2"/>
+<path d="M 250 280 Q 280 270 320 275 L 460 275 Q 460 290 440 295 L 260 295 Q 248 295 250 280 Z" fill="#FFFFFF" opacity="0.08"/>
+<g transform="translate(295 360)">
+<circle r="38" fill="url(#eyeGlow)"/>
+<circle r="30" fill="#FFFFFF" opacity="0.15"/>
+<circle r="22" fill="url(#eyeCore)"/>
+<circle cx="-8" cy="-9" r="10" fill="#FFFFFF"/>
+<circle cx="10" cy="8" r="4" fill="#FFFFFF" opacity="0.85"/>
+</g>
+<g transform="translate(415 360)">
+<circle r="38" fill="url(#eyeGlow)"/>
+<circle r="30" fill="#FFFFFF" opacity="0.15"/>
+<circle r="22" fill="url(#eyeCore)"/>
+<circle cx="-8" cy="-9" r="10" fill="#FFFFFF"/>
+<circle cx="10" cy="8" r="4" fill="#FFFFFF" opacity="0.85"/>
+</g>
+<path d="M 320 418 Q 355 442 390 418" fill="none" stroke="#85B7EB" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="265" cy="410" rx="14" ry="8" fill="#7F77DD" opacity="0.35"/>
+<ellipse cx="445" cy="410" rx="14" ry="8" fill="#7F77DD" opacity="0.35"/>
+<line x1="340" y1="165" x2="340" y2="135" stroke="#534AB7" stroke-width="3" stroke-linecap="round"/>
+<circle cx="340" cy="130" r="9" fill="#7F77DD" stroke="#3C3489" stroke-width="2"/>
+<circle cx="340" cy="130" r="3.5" fill="#E6F1FB"/>
+<path d="M 195 420 Q 165 430 158 470 Q 152 510 185 525 L 235 530 Q 248 530 250 515 L 248 460 Q 246 440 230 432 Z" fill="url(#bodyGrad)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<ellipse cx="195" cy="520" rx="32" ry="28" fill="#FFFFFF" stroke="#7F77DD" stroke-width="2.5"/>
+<ellipse cx="190" cy="515" rx="14" ry="10" fill="#FFFFFF" opacity="0.9"/>
+<path d="M 495 420 Q 530 425 545 465 Q 555 505 525 525 L 480 528 Q 465 528 462 513 L 460 460 Q 462 440 478 432 Z" fill="url(#bodyGrad)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 545 465 Q 555 505 525 525 L 495 528 Q 525 520 530 490 Q 532 470 525 455 Z" fill="url(#bodyShade)" opacity="0.5"/>
+<ellipse cx="525" cy="520" rx="32" ry="28" fill="#FFFFFF" stroke="#7F77DD" stroke-width="2.5"/>
+<ellipse cx="520" cy="515" rx="14" ry="10" fill="#FFFFFF" opacity="0.9"/>
+<g transform="translate(155 470) rotate(-12)">
+<rect x="0" y="0" width="92" height="68" rx="8" fill="url(#tabletGrad)" stroke="#3C3489" stroke-width="2"/>
+<rect x="6" y="6" width="80" height="56" rx="4" fill="url(#screenGrad)"/>
+<rect x="12" y="14" width="40" height="3" rx="1.5" fill="#85B7EB"/>
+<rect x="12" y="22" width="56" height="2" rx="1" fill="#AFA9EC" opacity="0.7"/>
+<rect x="12" y="28" width="48" height="2" rx="1" fill="#AFA9EC" opacity="0.7"/>
+<rect x="12" y="34" width="52" height="2" rx="1" fill="#AFA9EC" opacity="0.7"/>
+<circle cx="14" cy="44" r="3" fill="#1D9E75"/>
+<path d="M 12.5 44 L 14 45.5 L 16 42.5" stroke="#FFFFFF" stroke-width="1" fill="none" stroke-linecap="round"/>
+<rect x="20" y="42" width="42" height="2" rx="1" fill="#85B7EB"/>
+<circle cx="14" cy="52" r="3" fill="#EF9F27"/>
+<rect x="20" y="50" width="36" height="2" rx="1" fill="#85B7EB" opacity="0.7"/>
+</g>
+<g opacity="0.7">
+<path d="M 160 460 Q 155 430 175 405 Q 195 385 235 388" fill="none" stroke="#85B7EB" stroke-width="1.5" stroke-dasharray="3 3"/>
+<circle cx="180" cy="408" r="6" fill="url(#holoGrad)" opacity="0.8"/>
+<circle cx="180" cy="408" r="2.5" fill="#FFFFFF"/>
+</g>
+<g transform="translate(280 490)" opacity="0.55">
+<rect x="0" y="0" width="120" height="3" rx="1.5" fill="#7F77DD"/>
+<rect x="0" y="10" width="140" height="3" rx="1.5" fill="#AFA9EC"/>
+<rect x="0" y="20" width="100" height="3" rx="1.5" fill="#AFA9EC"/>
+<rect x="0" y="30" width="130" height="3" rx="1.5" fill="#AFA9EC"/>
+</g>
+<ellipse cx="290" cy="635" rx="38" ry="14" fill="#534AB7" stroke="#26215C" stroke-width="2"/>
+<ellipse cx="290" cy="632" rx="32" ry="9" fill="#7F77DD"/>
+<ellipse cx="390" cy="635" rx="38" ry="14" fill="#534AB7" stroke="#26215C" stroke-width="2"/>
+<ellipse cx="390" cy="632" rx="32" ry="9" fill="#7F77DD"/>
+<g transform="translate(560 510)" opacity="0.85"><path d="M 0 -8 L 2 -2 L 8 0 L 2 2 L 0 8 L -2 2 L -8 0 L -2 -2 Z" fill="#378ADD"/></g>
+<g transform="translate(115 470) scale(0.7)" opacity="0.85"><path d="M 0 -8 L 2 -2 L 8 0 L 2 2 L 0 8 L -2 2 L -8 0 L -2 -2 Z" fill="#7F77DD"/></g>
+<g transform="translate(595 580) scale(0.6)" opacity="0.7"><path d="M 0 -8 L 2 -2 L 8 0 L 2 2 L 0 8 L -2 2 L -8 0 L -2 -2 Z" fill="#AFA9EC"/></g>
+</svg>

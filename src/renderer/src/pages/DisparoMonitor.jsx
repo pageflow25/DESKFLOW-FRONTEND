@@ -4,6 +4,7 @@ import { tw } from '@twind/core'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { orcamentoService, parseApiError } from '../services/api'
+import Mascote from '../components/Mascote'
 
 const PAGE_SIZE = 10
 
@@ -238,17 +239,27 @@ export default function DisparoMonitor() {
 
       <main className={tw`flex-1 overflow-auto px-6 py-6`}>
         {error && (
-          <div className={tw`mb-4 px-4 py-3 rounded-lg`} style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}`, color: c.errorText }}>
-            {error}
+          <div className={tw`flex flex-col items-center justify-center py-12`}>
+            <Mascote pose="manutencao" size={120} style={{ opacity: 0.9 }} />
+            <div className={tw`mt-4 px-4 py-3 rounded-lg`} style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}`, color: c.errorText }}>
+              {error}
+            </div>
           </div>
         )}
 
         {loading && (
-          <div className={tw`text-sm`} style={{ color: c.textSecondary }}>Carregando lotes...</div>
+          <div className={tw`flex flex-col items-center justify-center py-12`}>
+            <Mascote pose="processando" size={120} style={{ opacity: 0.9 }} />
+            <p className={tw`text-sm mt-4`} style={{ color: c.textSecondary }}>Carregando lotes...</p>
+          </div>
         )}
 
         {!loading && !error && lotes.length === 0 && (
-          <div className={tw`text-sm`} style={{ color: c.textSecondary }}>Nenhum lote encontrado.</div>
+          <div className={tw`flex flex-col items-center justify-center py-12`}>
+            <Mascote pose="entrega" size={140} />
+            <p className={tw`text-base font-semibold mt-4`} style={{ color: c.textSecondary }}>Nenhum lote encontrado.</p>
+            <p className={tw`text-sm mt-1`} style={{ color: c.textMuted }}>Os disparos realizados aparecerão aqui.</p>
+          </div>
         )}
 
         {!loading && lotes.length > 0 && (

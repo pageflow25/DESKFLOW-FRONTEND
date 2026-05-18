@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { tw } from '@twind/core'
+import Mascote from '../components/Mascote'
 
 // ============================================
 // ÍCONES SVG
@@ -125,8 +126,20 @@ export default function Login() {
       {/* ============================================ */}
       {/* CONTEÚDO PRINCIPAL - LOGIN */}
       {/* ============================================ */}
-      <main className={tw`flex-1 flex items-center justify-center px-6`}>
-        <div className={tw`w-full max-w-md`}>
+      <main className={tw`flex-1 flex items-center justify-center px-6 overflow-hidden`}>
+        <div className={tw`w-full max-w-4xl flex items-center gap-12`}>
+
+          {/* Painel esquerdo — mascote */}
+          <div className={tw`hidden lg:flex flex-col items-center justify-center flex-1 text-center select-none`}>
+            <Mascote pose="acenando" size={260} style={{ filter: 'drop-shadow(0 8px 24px rgba(99,102,241,0.15))' }} />
+            <h2 className={tw`text-2xl font-bold mt-4`} style={{ color: c.textPrimary }}>Olá! Sou o Flow</h2>
+            <p className={tw`text-sm mt-2 max-w-xs`} style={{ color: c.textSecondary }}>
+              Seu assistente de gestão de pedidos.<br />Faça login para continuar.
+            </p>
+          </div>
+
+          {/* Painel direito — formulário */}
+          <div className={tw`w-full lg:max-w-md flex-shrink-0`}>
           {/* Card de Login */}
           <div
             className={tw`rounded-xl border overflow-hidden`}
@@ -271,6 +284,8 @@ export default function Login() {
               DESKFLOW © {new Date().getFullYear()} - Versão 1.0.6
             </p>
           </div>
+
+          </div>{/* fim painel direito */}
         </div>
       </main>
     </div>

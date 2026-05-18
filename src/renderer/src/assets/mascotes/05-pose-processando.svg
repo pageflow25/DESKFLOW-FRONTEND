@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680" width="680" height="680" role="img">
+<title>Flow processando — loading</title>
+<desc>Pose com engrenagem girando para estados de carregamento.</desc>
+<defs>
+<linearGradient id="body" x1="20%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="45%" stop-color="#F8F9FF"/><stop offset="100%" stop-color="#D8DCF5"/></linearGradient>
+<linearGradient id="shade" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7F77DD" stop-opacity="0"/><stop offset="100%" stop-color="#534AB7" stop-opacity="0.35"/></linearGradient>
+<linearGradient id="fold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#CECBF6"/><stop offset="100%" stop-color="#7F77DD"/></linearGradient>
+<radialGradient id="face" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#3C3489"/><stop offset="55%" stop-color="#26215C"/><stop offset="100%" stop-color="#100B33"/></radialGradient>
+<radialGradient id="faceSuccess" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#0F6E56"/><stop offset="55%" stop-color="#085041"/><stop offset="100%" stop-color="#04342C"/></radialGradient>
+<radialGradient id="faceWarn" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#854F0B"/><stop offset="55%" stop-color="#633806"/><stop offset="100%" stop-color="#412402"/></radialGradient>
+<radialGradient id="eyeBlue" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="35%" stop-color="#AFE4FF"/><stop offset="75%" stop-color="#378ADD"/><stop offset="100%" stop-color="#185FA5"/></radialGradient>
+<radialGradient id="eyeGreen" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="35%" stop-color="#C0DD97"/><stop offset="75%" stop-color="#639922"/><stop offset="100%" stop-color="#3B6D11"/></radialGradient>
+<radialGradient id="eyeAmber" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="35%" stop-color="#FAC775"/><stop offset="75%" stop-color="#EF9F27"/><stop offset="100%" stop-color="#BA7517"/></radialGradient>
+<radialGradient id="shadow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#26215C" stop-opacity="0.3"/><stop offset="60%" stop-color="#26215C" stop-opacity="0.1"/><stop offset="100%" stop-color="#26215C" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse cx="340" cy="615" rx="155" ry="20" fill="url(#shadow)"/>
+<ellipse cx="290" cy="600" rx="38" ry="14" fill="#534AB7" stroke="#26215C" stroke-width="2"/>
+<ellipse cx="290" cy="597" rx="32" ry="9" fill="#7F77DD"/>
+<ellipse cx="390" cy="600" rx="38" ry="14" fill="#534AB7" stroke="#26215C" stroke-width="2"/>
+<ellipse cx="390" cy="597" rx="32" ry="9" fill="#7F77DD"/>
+<path d="M 220 180 Q 220 130 270 125 L 410 125 Q 440 125 455 145 L 495 190 Q 510 210 510 240 L 510 520 Q 510 575 455 585 L 235 585 Q 180 580 180 525 L 180 240 Q 180 190 220 180 Z" fill="url(#body)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 510 240 L 510 520 Q 510 575 455 585 L 380 585 Q 460 575 470 520 L 470 250 Q 465 220 450 205 Z" fill="url(#shade)" opacity="0.65"/>
+<path d="M 455 145 L 495 190 L 458 190 Q 448 190 448 180 L 448 148 Z" fill="url(#fold)" stroke="#534AB7" stroke-width="2" stroke-linejoin="round"/>
+<rect x="232" y="222" width="246" height="200" rx="46" fill="url(#face)" stroke="#26215C" stroke-width="2"/>
+<circle cx="295" cy="320" r="14" fill="url(#eyeBlue)">
+<animate attributeName="r" values="14;13;14" dur="2.2s" repeatCount="indefinite"/>
+</circle>
+<circle cx="295" cy="318" r="5" fill="#FFFFFF"/>
+<circle cx="415" cy="320" r="14" fill="url(#eyeBlue)">
+<animate attributeName="r" values="14;13;14" dur="2.2s" repeatCount="indefinite"/>
+</circle>
+<circle cx="415" cy="318" r="5" fill="#FFFFFF"/>
+<ellipse cx="355" cy="385" rx="14" ry="10" fill="#85B7EB"/>
+<ellipse cx="265" cy="370" rx="14" ry="8" fill="#7F77DD" opacity="0.35"/>
+<ellipse cx="445" cy="370" rx="14" ry="8" fill="#7F77DD" opacity="0.35"/>
+<line x1="340" y1="125" x2="340" y2="95" stroke="#534AB7" stroke-width="3" stroke-linecap="round"/>
+<circle cx="340" cy="90" r="9" fill="#7F77DD" stroke="#3C3489" stroke-width="2"/>
+<circle cx="340" cy="90" r="3.5" fill="#E6F1FB"/>
+<path d="M 195 380 Q 215 420 260 440 L 320 445 Q 335 445 335 430 L 320 410 Q 295 395 270 395 L 230 390 Z" fill="url(#body)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 495 380 Q 475 420 430 440 L 370 445 Q 355 445 355 430 L 370 410 Q 395 395 420 395 L 460 390 Z" fill="url(#body)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<g transform="translate(345 470)">
+<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite" additive="sum"/>
+<circle r="50" fill="#378ADD" stroke="#185FA5" stroke-width="3"/>
+<circle r="20" fill="#E6F1FB"/>
+<rect x="-7" y="-58" width="14" height="16" rx="2" fill="#378ADD" stroke="#185FA5" stroke-width="2.5"/>
+<rect x="-7" y="42" width="14" height="16" rx="2" fill="#378ADD" stroke="#185FA5" stroke-width="2.5"/>
+<rect x="-58" y="-7" width="16" height="14" rx="2" fill="#378ADD" stroke="#185FA5" stroke-width="2.5"/>
+<rect x="42" y="-7" width="16" height="14" rx="2" fill="#378ADD" stroke="#185FA5" stroke-width="2.5"/>
+</g>
+<path d="M 270 470 Q 245 440 260 405" fill="none" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 6">
+<animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.1s" repeatCount="indefinite"/>
+</path>
+<path d="M 420 470 Q 445 500 430 535" fill="none" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 6">
+<animate attributeName="stroke-dashoffset" from="0" to="24" dur="1.1s" repeatCount="indefinite"/>
+</path>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img">
+<title>Flow — ícone/avatar</title>
+<desc>Versão circular do Flow para favicon, chatbot e perfil.</desc>
+<defs>
+<radialGradient id="eyeBlue" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="35%" stop-color="#AFE4FF"/><stop offset="75%" stop-color="#378ADD"/><stop offset="100%" stop-color="#185FA5"/></radialGradient>
+<radialGradient id="bgCircle" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#7F77DD"/><stop offset="100%" stop-color="#3C3489"/></radialGradient>
+</defs>
+<circle cx="128" cy="128" r="120" fill="url(#bgCircle)" stroke="#26215C" stroke-width="3"/>
+<rect x="68" y="78" width="120" height="100" rx="28" fill="#100B33" stroke="#26215C" stroke-width="3"/>
+<g transform="translate(100 128)">
+<circle r="18" fill="url(#eyeBlue)"/>
+<circle r="10" fill="#FFFFFF" opacity="0.4"/>
+<circle cx="-4" cy="-4" r="5" fill="#FFFFFF"/>
+</g>
+<g transform="translate(156 128)">
+<circle r="18" fill="url(#eyeBlue)"/>
+<circle r="10" fill="#FFFFFF" opacity="0.4"/>
+<circle cx="-4" cy="-4" r="5" fill="#FFFFFF"/>
+</g>
+<path d="M 112 158 Q 128 170 144 158" fill="none" stroke="#85B7EB" stroke-width="5" stroke-linecap="round"/>
+<path d="M 188 82 L 208 102 L 192 102 Q 184 102 184 94 Z" fill="#7F77DD" stroke="#534AB7" stroke-width="2"/>
+</svg>

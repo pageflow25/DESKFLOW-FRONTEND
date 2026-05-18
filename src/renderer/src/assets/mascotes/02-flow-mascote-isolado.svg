@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680" width="680" height="680" role="img">
+<title>Flow — versão isolada</title>
+<desc>Mascote Flow centralizado sem cenário, pronto para uso como ativo gráfico.</desc>
+<defs>
+<linearGradient id="bodyGradB" x1="20%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="45%" stop-color="#F8F9FF"/><stop offset="100%" stop-color="#D8DCF5"/></linearGradient>
+<linearGradient id="bodyShadeB" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7F77DD" stop-opacity="0"/><stop offset="100%" stop-color="#534AB7" stop-opacity="0.35"/></linearGradient>
+<linearGradient id="foldGradB" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#CECBF6"/><stop offset="100%" stop-color="#7F77DD"/></linearGradient>
+<radialGradient id="faceGradB" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#3C3489"/><stop offset="55%" stop-color="#26215C"/><stop offset="100%" stop-color="#100B33"/></radialGradient>
+<radialGradient id="eyeGlowB" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="35%" stop-color="#AFE4FF"/><stop offset="75%" stop-color="#378ADD"/><stop offset="100%" stop-color="#185FA5"/></radialGradient>
+<radialGradient id="eyeCoreB" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="60%" stop-color="#E6F1FB" stop-opacity="0.9"/><stop offset="100%" stop-color="#85B7EB" stop-opacity="0"/></radialGradient>
+<radialGradient id="floorShadowB" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#26215C" stop-opacity="0.3"/><stop offset="60%" stop-color="#26215C" stop-opacity="0.1"/><stop offset="100%" stop-color="#26215C" stop-opacity="0"/></radialGradient>
+<linearGradient id="rimLightB" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+</defs>
+<ellipse cx="340" cy="615" rx="155" ry="20" fill="url(#floorShadowB)"/>
+<path d="M 220 180 Q 220 130 270 125 L 410 125 Q 440 125 455 145 L 495 190 Q 510 210 510 240 L 510 520 Q 510 575 455 585 L 235 585 Q 180 580 180 525 L 180 240 Q 180 190 220 180 Z" fill="url(#bodyGradB)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 510 240 L 510 520 Q 510 575 455 585 L 380 585 Q 460 575 470 520 L 470 250 Q 465 220 450 205 Z" fill="url(#bodyShadeB)" opacity="0.65"/>
+<path d="M 220 180 Q 220 130 270 125 L 410 125 Q 440 125 455 145 L 455 155 Q 440 138 410 138 L 272 138 Q 232 142 232 182 Z" fill="url(#rimLightB)" opacity="0.7"/>
+<path d="M 455 145 L 495 190 L 458 190 Q 448 190 448 180 L 448 148 Z" fill="url(#foldGradB)" stroke="#534AB7" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 455 148 L 490 186 L 460 186 Q 452 186 452 178 Z" fill="#3C3489" opacity="0.25"/>
+<rect x="232" y="222" width="246" height="200" rx="46" fill="url(#faceGradB)" stroke="#26215C" stroke-width="2"/>
+<path d="M 250 240 Q 280 230 320 235 L 460 235 Q 460 250 440 255 L 260 255 Q 248 255 250 240 Z" fill="#FFFFFF" opacity="0.08"/>
+<g transform="translate(295 320)">
+<circle r="38" fill="url(#eyeGlowB)"/>
+<circle r="30" fill="#FFFFFF" opacity="0.15"/>
+<circle r="22" fill="url(#eyeCoreB)"/>
+<circle cx="-8" cy="-9" r="10" fill="#FFFFFF"/>
+<circle cx="10" cy="8" r="4" fill="#FFFFFF" opacity="0.85"/>
+</g>
+<g transform="translate(415 320)">
+<circle r="38" fill="url(#eyeGlowB)"/>
+<circle r="30" fill="#FFFFFF" opacity="0.15"/>
+<circle r="22" fill="url(#eyeCoreB)"/>
+<circle cx="-8" cy="-9" r="10" fill="#FFFFFF"/>
+<circle cx="10" cy="8" r="4" fill="#FFFFFF" opacity="0.85"/>
+</g>
+<path d="M 320 378 Q 355 402 390 378" fill="none" stroke="#85B7EB" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="265" cy="370" rx="14" ry="8" fill="#7F77DD" opacity="0.35"/>
+<ellipse cx="445" cy="370" rx="14" ry="8" fill="#7F77DD" opacity="0.35"/>
+<line x1="340" y1="125" x2="340" y2="95" stroke="#534AB7" stroke-width="3" stroke-linecap="round"/>
+<circle cx="340" cy="90" r="9" fill="#7F77DD" stroke="#3C3489" stroke-width="2"/>
+<circle cx="340" cy="90" r="3.5" fill="#E6F1FB"/>
+<path d="M 195 380 Q 165 390 158 430 Q 152 470 185 485 L 235 490 Q 248 490 250 475 L 248 420 Q 246 400 230 392 Z" fill="url(#bodyGradB)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<ellipse cx="195" cy="480" rx="32" ry="28" fill="#FFFFFF" stroke="#7F77DD" stroke-width="2.5"/>
+<ellipse cx="190" cy="475" rx="14" ry="10" fill="#FFFFFF" opacity="0.9"/>
+<path d="M 495 380 Q 530 385 545 425 Q 555 465 525 485 L 480 488 Q 465 488 462 473 L 460 420 Q 462 400 478 392 Z" fill="url(#bodyGradB)" stroke="#7F77DD" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 545 425 Q 555 465 525 485 L 495 488 Q 525 480 530 450 Q 532 430 525 415 Z" fill="url(#bodyShadeB)" opacity="0.5"/>
+<ellipse cx="525" cy="480" rx="32" ry="28" fill="#FFFFFF" stroke="#7F77DD" stroke-width="2.5"/>
+<ellipse cx="520" cy="475" rx="14" ry="10" fill="#FFFFFF" opacity="0.9"/>
+<ellipse cx="290" cy="600" rx="38" ry="14" fill="#534AB7" stroke="#26215C" stroke-width="2"/>
+<ellipse cx="290" cy="597" rx="32" ry="9" fill="#7F77DD"/>
+<ellipse cx="390" cy="600" rx="38" ry="14" fill="#534AB7" stroke="#26215C" stroke-width="2"/>
+<ellipse cx="390" cy="597" rx="32" ry="9" fill="#7F77DD"/>
+</svg>

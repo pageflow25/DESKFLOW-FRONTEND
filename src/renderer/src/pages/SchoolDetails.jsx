@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -6,6 +6,7 @@ import { pedidoService, orcamentoService, parseApiError } from '../services/api'
 import { tw } from '@twind/core'
 import TreeGrid from '../components/TreeGrid'
 import ToggleGerarOP from '../components/ToggleGerarOP'
+import Mascote from '../components/Mascote'
 
 // ============================================
 // ÍCONES SVG
@@ -123,10 +124,24 @@ export default function SchoolDetails() {
   const [idsFormularios, setIdsFormularios] = useState('')
   const [statusOptions, setStatusOptions] = useState([])
   const [selectedStatusId, setSelectedStatusId] = useState(1)
+  const [progressoEnvio, setProgressoEnvio] = useState(null)
+  const [elapsedSecs, setElapsedSecs] = useState(0)
+  const progressIntervalRef = useRef(null)
 
   useEffect(() => {
     loadPedidos()
   }, [escolaId])
+
+  useEffect(() => {
+    if (generatingBudget && progressoEnvio) {
+      progressIntervalRef.current = setInterval(() => {
+        setElapsedSecs(Math.floor((Date.now() - progressoEnvio.startTime) / 1000))
+      }, 500)
+    } else {
+      clearInterval(progressIntervalRef.current)
+    }
+    return () => clearInterval(progressIntervalRef.current)
+  }, [generatingBudget, progressoEnvio])
 
   useEffect(() => {
     loadStatusOptions()
@@ -254,9 +269,11 @@ export default function SchoolDetails() {
     if (selectedItems.checkedCount === 0) return
 
     try {
+      const dadosSelecao = extrairDadosSelecao()
+      setProgressoEnvio({ startTime: Date.now(), baixarArquivos })
+      setElapsedSecs(0)
       setGeneratingBudget(true)
       setSuccessMessage('')
-      const dadosSelecao = extrairDadosSelecao()
 
       // Formatar data de entrega para ISO se fornecida
       const dataEntregaFormatada = dataEntrega
@@ -311,6 +328,7 @@ export default function SchoolDetails() {
 
       setError(`${prefix}${statusText}: ${parsedError.message}${detail}`)
     } finally {
+      setProgressoEnvio(null)
       setGeneratingBudget(false)
       setShowDateModal(false)
       setDataEntrega('')
@@ -332,6 +350,11 @@ export default function SchoolDetails() {
   const dadosSelecaoAtual = extrairDadosSelecao()
   const datasSelecionadasFormatadas = dadosSelecaoAtual.datasSaida.map(formatDatePtBr)
   const temMultiplasDatasSelecionadas = dadosSelecaoAtual.datasSaida.length > 1
+  const dataEntregaPreSelecionada = (() => {
+    const primeiraDataSelecionada = dadosSelecaoAtual.datasSaida[0]
+    if (!primeiraDataSelecionada || typeof primeiraDataSelecionada !== 'string') return ''
+    return primeiraDataSelecionada.slice(0, 10)
+  })()
   const selectedCount = selectedItems.checkedCount || 0
   const partialCount = selectedItems.partialCount || 0
   const hasSelection = selectedCount > 0
@@ -584,7 +607,10 @@ export default function SchoolDetails() {
 
               <button
                 type="button"
-                onClick={() => setShowDateModal(true)}
+                onClick={() => {
+                  setDataEntrega(dataEntregaPreSelecionada)
+                  setShowDateModal(true)
+                }}
                 disabled={!hasSelection || generatingBudget || divisoes.length === 0}
                 className={tw`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${!hasSelection || generatingBudget
                   ? 'cursor-not-allowed'
@@ -638,7 +664,7 @@ export default function SchoolDetails() {
               className={tw`flex items-center gap-3 px-4 py-3 rounded-lg`}
               style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}` }}
             >
-              <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.errorText }} />
+              <Mascote pose="atencao" size={36} style={{ flexShrink: 0 }} />
               <p className={tw`text-sm`} style={{ color: c.errorText }}>{error}</p>
             </div>
           )}
@@ -647,7 +673,7 @@ export default function SchoolDetails() {
               className={tw`flex items-center gap-3 px-4 py-3 rounded-lg`}
               style={{ backgroundColor: c.successBg, border: `1px solid ${c.successBorder}` }}
             >
-              <Icons.CheckCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.successText }} />
+              <Mascote pose="entrega" size={36} style={{ flexShrink: 0 }} />
               <p className={tw`text-sm font-medium`} style={{ color: c.successText }}>{successMessage}</p>
             </div>
           )}
@@ -661,8 +687,8 @@ export default function SchoolDetails() {
         {/* Loading State */}
         {loading && (
           <div className={tw`flex flex-col items-center justify-center h-full`}>
-            <Icons.Spinner className={tw`w-10 h-10 animate-spin mb-4`} style={{ color: c.accent }} />
-            <p className={tw`text-sm font-medium`} style={{ color: c.textSecondary }}>Carregando pedidos...</p>
+            <Mascote pose="processando" size={140} />
+            <p className={tw`text-sm font-medium mt-4`} style={{ color: c.textSecondary }}>Carregando pedidos...</p>
           </div>
         )}
 
@@ -901,6 +927,109 @@ export default function SchoolDetails() {
           </div>
         )
       }
+
+      {/* ============================================ */}
+      {/* OVERLAY DE PROGRESSO DO ENVIO               */}
+      {/* ============================================ */}
+      {generatingBudget && progressoEnvio && (() => {
+        const pct = Math.min(92, Math.round(100 * (1 - Math.exp(-elapsedSecs / 25))))
+        const hasFase3 = progressoEnvio.baixarArquivos
+        let faseAtual = 1
+        if (elapsedSecs >= 3 && elapsedSecs < 13) faseAtual = 2
+        else if (elapsedSecs >= 13 && (elapsedSecs < 23 || !hasFase3)) faseAtual = 3
+        else if (elapsedSecs >= 23 && hasFase3) faseAtual = 4
+
+        const fases = [
+          { id: 1, label: 'Calculando orçamentos', desc: 'Processando dados localmente...' },
+          { id: 2, label: 'Enviando para API Bremen', desc: 'Fase 1 — Gerando orçamento...' },
+          { id: 3, label: 'Aprovando pedido', desc: 'Fase 2 — Processando aprovação...' },
+          ...(hasFase3 ? [{ id: 4, label: 'Baixando arquivos', desc: 'Fase 3 — Download dos PDFs...' }] : []),
+        ]
+
+        const mins = Math.floor(elapsedSecs / 60)
+        const secs = elapsedSecs % 60
+        const tempoStr = mins > 0 ? `${mins}m ${secs}s` : `${elapsedSecs}s`
+
+        return (
+          <div
+            className={tw`fixed inset-0 z-50 flex items-center justify-center`}
+            style={{ backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(3px)' }}
+          >
+            <div
+              className={tw`rounded-2xl shadow-2xl p-7 w-full max-w-sm mx-4`}
+              style={{ backgroundColor: c.modalBg, border: `1px solid ${c.border}` }}
+            >
+              {/* Header */}
+              <div className={tw`flex flex-col items-center mb-5`}>
+                <Mascote pose="processando" size={96} style={{ marginBottom: '12px' }} />
+                <h3 className={tw`text-base font-bold`} style={{ color: c.textPrimary }}>Processando Pedido</h3>
+                <p className={tw`text-xs mt-0.5`} style={{ color: c.textSecondary }}>{nomeEscola}</p>
+              </div>
+
+              {/* Barra de progresso */}
+              <div className={tw`mb-5`}>
+                <div className={tw`flex items-center justify-between mb-1.5`}>
+                  <span className={tw`text-xs font-semibold`} style={{ color: c.accent }}>{pct}%</span>
+                  <span className={tw`text-xs font-mono`} style={{ color: c.textMuted }}>{tempoStr}</span>
+                </div>
+                <div className={tw`h-2 rounded-full overflow-hidden`} style={{ backgroundColor: c.border }}>
+                  <div
+                    className={tw`h-full rounded-full`}
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: c.accent,
+                      transition: 'width 0.8s ease-out'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Lista de fases */}
+              <div className={tw`space-y-2.5`}>
+                {fases.map(fase => {
+                  const concluida = fase.id < faseAtual
+                  const atual = fase.id === faseAtual
+                  const pendente = fase.id > faseAtual
+                  return (
+                    <div key={fase.id} className={tw`flex items-center gap-3`}>
+                      <div
+                        className={tw`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0`}
+                        style={{
+                          backgroundColor: concluida ? '#16a34a1a' : atual ? c.accentBg : c.sectionBg,
+                          border: `2px solid ${concluida ? '#16a34a' : atual ? c.accent : c.border}`
+                        }}
+                      >
+                        {concluida
+                          ? <svg className={tw`w-3 h-3`} fill="none" viewBox="0 0 24 24" stroke="#16a34a" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          : atual
+                            ? <Icons.Spinner className={tw`w-3 h-3 animate-spin`} style={{ color: c.accent }} />
+                            : <span className={tw`w-1.5 h-1.5 rounded-full inline-block`} style={{ backgroundColor: c.border }} />
+                        }
+                      </div>
+                      <div className={tw`min-w-0`}>
+                        <p
+                          className={tw`text-sm font-medium`}
+                          style={{ color: pendente ? c.textMuted : c.textPrimary }}
+                        >
+                          {fase.label}
+                        </p>
+                        {atual && (
+                          <p className={tw`text-xs`} style={{ color: c.textSecondary }}>{fase.desc}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Aviso */}
+              <p className={tw`text-xs text-center mt-5`} style={{ color: c.textMuted }}>
+                Não feche esta janela durante o processamento
+              </p>
+            </div>
+          </div>
+        )
+      })()}
     </div >
   )
 }

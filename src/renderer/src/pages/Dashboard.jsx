@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { dashboardService, parseApiError } from '../services/api'
 import { tw } from '@twind/core'
+import Mascote from '../components/Mascote'
 
 // ============================================
 // ÍCONES SVG
@@ -293,19 +294,22 @@ export default function Dashboard() {
         {/* Loading State */}
         {loading && (
           <div className={tw`flex flex-col items-center justify-center py-20`}>
-            <Icons.Spinner className={tw`w-10 h-10 animate-spin mb-4`} style={{ color: c.accent }} />
-            <p className={tw`text-sm font-medium`} style={{ color: c.textMuted }}>Carregando escolas...</p>
+            <Mascote pose="processando" size={140} style={{ opacity: 0.9 }} />
+            <p className={tw`text-sm font-medium mt-4`} style={{ color: c.textMuted }}>Carregando escolas...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div
-            className={tw`flex items-center gap-3 px-4 py-3 rounded-lg mb-6`}
-            style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}` }}
-          >
-            <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.errorText }} />
-            <p className={tw`text-sm`} style={{ color: c.errorText }}>{error}</p>
+          <div className={tw`flex flex-col items-center justify-center py-12`}>
+            <Mascote pose="manutencao" size={140} style={{ opacity: 0.9 }} />
+            <div
+              className={tw`flex items-center gap-3 px-4 py-3 rounded-lg mt-4`}
+              style={{ backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}` }}
+            >
+              <Icons.ExclamationCircle className={tw`w-5 h-5 flex-shrink-0`} style={{ color: c.errorText }} />
+              <p className={tw`text-sm`} style={{ color: c.errorText }}>{error}</p>
+            </div>
           </div>
         )}
 
@@ -383,13 +387,8 @@ export default function Dashboard() {
         {/* Empty State */}
         {!loading && !error && escolas.length === 0 && (
           <div className={tw`flex flex-col items-center justify-center py-20`}>
-            <div
-              className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
-              style={{ backgroundColor: c.sectionBg }}
-            >
-              <Icons.Building className={tw`w-10 h-10`} style={{ color: c.emptyIcon }} />
-            </div>
-            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: c.textSecondary }}>
+            <Mascote pose="pensando" size={140} />
+            <h3 className={tw`text-lg font-semibold mb-2 mt-4`} style={{ color: c.textSecondary }}>
               Nenhuma escola encontrada
             </h3>
             <p className={tw`text-sm text-center max-w-md`} style={{ color: c.textMuted }}>
@@ -400,13 +399,8 @@ export default function Dashboard() {
 
         {!loading && !error && escolas.length > 0 && escolasFiltradas.length === 0 && (
           <div className={tw`flex flex-col items-center justify-center py-20`}>
-            <div
-              className={tw`w-20 h-20 rounded-full flex items-center justify-center mb-6`}
-              style={{ backgroundColor: c.sectionBg }}
-            >
-              <Icons.Building className={tw`w-10 h-10`} style={{ color: c.emptyIcon }} />
-            </div>
-            <h3 className={tw`text-lg font-semibold mb-2`} style={{ color: c.textSecondary }}>
+            <Mascote pose="pensando" size={140} />
+            <h3 className={tw`text-lg font-semibold mb-2 mt-4`} style={{ color: c.textSecondary }}>
               Nenhuma escola encontrada
             </h3>
             <p className={tw`text-sm text-center max-w-md`} style={{ color: c.textMuted }}>
