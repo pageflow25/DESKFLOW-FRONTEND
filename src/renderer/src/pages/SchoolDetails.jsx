@@ -325,11 +325,11 @@ export default function SchoolDetails() {
       )
 
       if (modoAgrupamento === 'escola_distribuicao') {
-        setProgressoEnvio({ startTime: Date.now(), baixarArquivos, etapa: 'escola', aprovarAutomaticamente: true })
+        setProgressoEnvio({ startTime: Date.now(), baixarArquivos: false, etapa: 'escola', aprovarAutomaticamente: true })
         const resultadoEscola = await gerarOrcamentoComModo({
           modo: 'escola',
-          persistirResultado: true,
-          baixarArquivosEtapa: baixarArquivos,
+          persistirResultado: false,
+          baixarArquivosEtapa: false,
           gerarOpEtapa: true,
           aprovarAutomaticamenteEtapa: true
         })
@@ -346,9 +346,9 @@ export default function SchoolDetails() {
         })
 
         setSuccessMessage(
-          `Fluxo concluído! Etapa 1: escola aprovada e salva com OP (${resultadoEscola.total_unidades} orçamento). `
-          + `Etapa 2: distribuição salva sem reaprovar (${resultadoDistribuicao.total_unidades} unidade(s))`
-          + `${resultadoEscola.grupo_lote_id ? ` — Lote #${resultadoEscola.grupo_lote_id}` : ''}`
+          `Fluxo concluído! Etapa 1: escola aprovada com OP sem gravar no banco (${resultadoEscola.total_unidades} orçamento). `
+          + `Etapa 2: distribuição salva por unidade sem reaprovar (${resultadoDistribuicao.total_unidades} unidade(s))`
+          + `${resultadoDistribuicao.grupo_lote_id ? ` — Lote #${resultadoDistribuicao.grupo_lote_id}` : ''}`
         )
       } else {
         const result = await gerarOrcamentoComModo({
@@ -913,7 +913,12 @@ export default function SchoolDetails() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setModoAgrupamento('escola_distribuicao'); setGerarOp(true) }}
+                    onClick={() => {
+                      setModoAgrupamento('escola_distribuicao')
+                      setGerarOp(true)
+                      setBaixarArquivos(false)
+                      setOrganizarArquivosPorEscola(false)
+                    }}
                     disabled={generatingBudget}
                     className={tw`px-4 py-3 rounded-lg border text-sm font-medium transition-all`}
                     style={{
@@ -925,13 +930,13 @@ export default function SchoolDetails() {
                   >
                     <div className={tw`font-semibold mb-1`}>Escola + Distribuição</div>
                     <div className={tw`text-xs`} style={{ color: c.textMuted }}>
-                      Escola aprova com OP; unidade apenas salva
+                      Escola aprova com OP sem persistir; unidade grava no banco
                     </div>
                   </button>
                 </div>
               </div>
 
-              {modoAgrupamento === 'escola_distribuicao' && (
+              {modoAgrupamento === 'escola' && baixarArquivos && (
                 <div className={tw`mb-6`}>
                   <label className={tw`block text-sm font-medium mb-2`} style={{ color: c.textPrimary }}>
                     Organização dos arquivos
@@ -997,12 +1002,16 @@ export default function SchoolDetails() {
                   <div>
                     <p className={tw`text-sm font-semibold`} style={{ color: c.textPrimary }}>Baixar arquivos após aprovação</p>
                     <p className={tw`text-xs mt-0.5`} style={{ color: c.textMuted }}>
-                      {baixarArquivos ? 'Fase 03 será executada — download dos PDFs gerados' : 'Fase 03 ignorada — apenas gera e aprova o orçamento'}
+                      {modoAgrupamento === 'escola_distribuicao'
+                        ? 'Indisponível neste modo: a etapa por escola aprova sem gravar dados para download.'
+                        : baixarArquivos
+                          ? 'Fase 03 será executada — download dos PDFs gerados'
+                          : 'Fase 03 ignorada — apenas gera e aprova o orçamento'}
                     </p>
                   </div>
                   <button
                     type="button"
-                    disabled={generatingBudget}
+                    disabled={generatingBudget || modoAgrupamento === 'escola_distribuicao'}
                     onClick={() => setBaixarArquivos(v => !v)}
                     className={tw`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50`}
                     style={{ backgroundColor: baixarArquivos ? c.accent : c.border }}
@@ -1092,9 +1101,9 @@ export default function SchoolDetails() {
             ? 'Etapa 2: Por Distribuição'
             : 'Processando Pedido'
         const etapaDescricao = etapaAtual === 'escola'
-          ? 'Aprovando OP e salvando no banco de dados'
+          ? 'Aprovando OP sem gravar no banco de dados'
           : etapaAtual === 'distribuicao'
-            ? 'Salvando distribuição sem reaprovar OP'
+            ? 'Salvando distribuição por unidade sem reaprovar OP'
             : nomeEscola
         let faseAtual = 1
         if (elapsedSecs >= 3 && elapsedSecs < 13) faseAtual = 2
@@ -1103,8 +1112,8 @@ export default function SchoolDetails() {
 
         const fases = [
           { id: 1, label: 'Calculando orçamentos', desc: 'Processando dados localmente...' },
-          { id: 2, label: 'Enviando para API Bremen', desc: 'Fase 1 — Gerando orçamento para salvar...' },
-          { id: 3, label: etapaAtual === 'distribuicao' ? 'Registrando distribuição' : 'Aprovando pedido', desc: etapaAtual === 'escola' ? 'Fase 2 — Gerando OP com persistência...' : etapaAtual === 'distribuicao' ? 'Salvando sem nova aprovação...' : 'Fase 2 — Processando aprovação...' },
+          { id: 2, label: 'Enviando para API Bremen', desc: etapaAtual === 'escola' ? 'Fase 1 — Gerando orçamento sem persistência...' : 'Fase 1 — Gerando orçamento para salvar...' },
+          { id: 3, label: etapaAtual === 'distribuicao' ? 'Registrando distribuição' : 'Aprovando pedido', desc: etapaAtual === 'escola' ? 'Fase 2 — Gerando OP sem gravar no banco...' : etapaAtual === 'distribuicao' ? 'Salvando sem nova aprovação...' : 'Fase 2 — Processando aprovação...' },
           ...(hasFase3 ? [{ id: 4, label: 'Baixando arquivos', desc: 'Fase 3 — Download dos PDFs...' }] : []),
         ]
 
