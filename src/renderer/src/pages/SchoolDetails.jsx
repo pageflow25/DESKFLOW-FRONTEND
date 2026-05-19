@@ -334,20 +334,20 @@ export default function SchoolDetails() {
           aprovarAutomaticamenteEtapa: true
         })
 
-        setProgressoEnvio({ startTime: Date.now(), baixarArquivos: false, etapa: 'distribuicao', aprovarAutomaticamente: false })
+        setProgressoEnvio({ startTime: Date.now(), baixarArquivos: false, etapa: 'distribuicao', aprovarAutomaticamente: true })
         const resultadoDistribuicao = await gerarOrcamentoComModo({
           modo: 'unidade',
           persistirResultado: true,
           baixarArquivosEtapa: false,
           gerarOpEtapa: false,
-          aprovarAutomaticamenteEtapa: false,
+          aprovarAutomaticamenteEtapa: true,
           grupoLoteId: resultadoEscola.grupo_lote_id,
           atualizarStatusFase01: false
         })
 
         setSuccessMessage(
           `Fluxo concluído! Etapa 1: escola aprovada com OP sem gravar no banco (${resultadoEscola.total_unidades} orçamento). `
-          + `Etapa 2: distribuição salva por unidade sem reaprovar (${resultadoDistribuicao.total_unidades} unidade(s))`
+          + `Etapa 2: distribuição aprovada por unidade sem gerar OP (${resultadoDistribuicao.total_unidades} unidade(s))`
           + `${resultadoDistribuicao.grupo_lote_id ? ` — Lote #${resultadoDistribuicao.grupo_lote_id}` : ''}`
         )
       } else {
@@ -930,7 +930,7 @@ export default function SchoolDetails() {
                   >
                     <div className={tw`font-semibold mb-1`}>Escola + Distribuição</div>
                     <div className={tw`text-xs`} style={{ color: c.textMuted }}>
-                      Escola aprova com OP sem persistir; unidade grava no banco
+                      Escola aprova com OP sem persistir; unidade aprova sem gerar OP
                     </div>
                   </button>
                 </div>
@@ -1103,7 +1103,7 @@ export default function SchoolDetails() {
         const etapaDescricao = etapaAtual === 'escola'
           ? 'Aprovando OP sem gravar no banco de dados'
           : etapaAtual === 'distribuicao'
-            ? 'Salvando distribuição por unidade sem reaprovar OP'
+            ? 'Aprovando distribuição por unidade sem gerar OP'
             : nomeEscola
         let faseAtual = 1
         if (elapsedSecs >= 3 && elapsedSecs < 13) faseAtual = 2
@@ -1113,7 +1113,7 @@ export default function SchoolDetails() {
         const fases = [
           { id: 1, label: 'Calculando orçamentos', desc: 'Processando dados localmente...' },
           { id: 2, label: 'Enviando para API Bremen', desc: etapaAtual === 'escola' ? 'Fase 1 — Gerando orçamento sem persistência...' : 'Fase 1 — Gerando orçamento para salvar...' },
-          { id: 3, label: etapaAtual === 'distribuicao' ? 'Registrando distribuição' : 'Aprovando pedido', desc: etapaAtual === 'escola' ? 'Fase 2 — Gerando OP sem gravar no banco...' : etapaAtual === 'distribuicao' ? 'Salvando sem nova aprovação...' : 'Fase 2 — Processando aprovação...' },
+          { id: 3, label: etapaAtual === 'distribuicao' ? 'Aprovando distribuição' : 'Aprovando pedido', desc: etapaAtual === 'escola' ? 'Fase 2 — Gerando OP sem gravar no banco...' : etapaAtual === 'distribuicao' ? 'Aprovando sem gerar OP...' : 'Fase 2 — Processando aprovação...' },
           ...(hasFase3 ? [{ id: 4, label: 'Baixando arquivos', desc: 'Fase 3 — Download dos PDFs...' }] : []),
         ]
 
