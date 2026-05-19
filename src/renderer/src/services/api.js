@@ -181,7 +181,7 @@ export const pedidoService = {
 
 // Serviço de orçamento
 export const orcamentoService = {
-  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null, nomeArquivoFiltro = null, persistirResultado = true, aprovarAutomaticamente = true) => {
+  gerarOrcamento: async (escolaId, idsProdutos, datasSaida, divisoesLogistica = null, diasUteisFiltro = null, dataEntrega = null, modoAgrupamento = 'unidade', gerarOp = true, idsFormularios = null, statusIds = null, baixarArquivos = false, idsUnidades = null, idsArquivos = null, nomeArquivoFiltro = null, persistirResultado = true, aprovarAutomaticamente = true, organizarArquivosPorEscola = false, grupoLoteId = null, atualizarStatusFase01 = true) => {
     const payload = {
       escola_id: escolaId,
       ids_produtos: idsProdutos,
@@ -190,7 +190,9 @@ export const orcamentoService = {
       aprovar_automaticamente: aprovarAutomaticamente,
       gerar_op: gerarOp,
       baixar_arquivos: baixarArquivos,
-      persistir_resultado: persistirResultado
+      persistir_resultado: persistirResultado,
+      organizar_arquivos_por_escola: organizarArquivosPorEscola,
+      atualizar_status_fase01: atualizarStatusFase01
     }
     
     // Adicionar parâmetros opcionais se fornecidos
@@ -217,6 +219,9 @@ export const orcamentoService = {
     }
     if (nomeArquivoFiltro && nomeArquivoFiltro.trim()) {
       payload.nome_arquivo_filtro = nomeArquivoFiltro.trim()
+    }
+    if (grupoLoteId) {
+      payload.grupo_lote_id = grupoLoteId
     }
     
     const response = await api.post('/api/orcamento/gerar', payload)
